@@ -1,0 +1,310 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+
+type Language = "en" | "so";
+export type TranslationKey = keyof typeof translations.en;
+
+const LANGUAGE_KEY = "@dalka_language";
+
+const translations = {
+  en: {
+    discover: "Discover", chat: "Chat", alerts: "Alerts", profile: "Profile", mapSearch: "Map search", noMapListings: "No listings with map coordinates yet.", recommendedForYou: "RECOMMENDED FOR YOU", unlockApp: "UNLOCK HAYÁN", agentDirectory: "Agent directory", mortgageCalculator: "Mortgage calculator", homePrice: "Home price (USD)", downPaymentPercent: "Down payment (%)", annualInterest: "Annual interest (%)", loanTermYears: "Loan term (years)", monthlyPaymentEstimate: "ESTIMATED MONTHLY PAYMENT", loanAmount: "Loan amount",
+    savedSearches: "Saved searches", noSavedSearches: "No saved searches yet.", savedSearchSetup: "Sign in and apply the saved-searches database migration first.", collections: "Collections", createCollection: "Create collection", collectionName: "Collection name", noCollections: "Create a collection to group saved homes.", addSavedHomes: "Add saved homes", removeFromCollection: "Remove from collection", collectionSetup: "Apply the HAYÁN roadmap database migration to use collections.", notificationSettings: "Notification settings", pushNotifications: "Push notifications", pushNotificationsDescription: "Get alerts for new matching listings, price changes, messages, and viewing updates, even when HAYÁN is closed. Remote push requires an EAS development or store build; it does not work in Expo Go.", enablePush: "ENABLE NOTIFICATIONS", disablePush: "TURN OFF ON THIS DEVICE", pushEnabled: "Notifications are enabled on this device.", pushDisabled: "Notifications were turned off on this device.", pushPermissionDenied: "Allow notifications in iPhone Settings to enable alerts.", pushProjectIdMissing: "Push needs an EAS project ID. Set EXPO_PUBLIC_EAS_PROJECT_ID after linking this app with EAS.", pushMobileOnly: "Push notifications are available in the iOS and Android app.", pushUnavailable: "Push notifications could not be configured.", securitySettings: "Security settings", biometricUnlock: "Biometric app lock", biometricUnlockDescription: "Require Face ID, Touch ID, or device biometrics when HAYÁN returns to the foreground. This is a local app lock.", enableBiometric: "ENABLE BIOMETRIC LOCK", disableBiometric: "DISABLE BIOMETRIC LOCK", biometricUnavailable: "Set up Face ID or Touch ID in device settings first.", biometricEnabled: "Biometric app lock is enabled.", biometricDisabled: "Biometric app lock is disabled.", mfaTitle: "Two-factor authentication", mfaDescription: "Add a time-based code from an authenticator app when signing in.", enableMfa: "SET UP AUTHENTICATOR", disableMfa: "REMOVE AUTHENTICATOR", mfaSecret: "Manual setup key", mfaCode: "Authenticator code", mfaVerifySetup: "VERIFY AND ENABLE", mfaChallengeTitle: "Verify it is you", mfaChallengeBody: "Enter the 6-digit code from your authenticator app.", verifyCode: "VERIFY CODE", mfaCodeInvalid: "Enter the current 6-digit code.", mfaSetupFailed: "Could not start authenticator setup.", mfaVerifyFailed: "Code verification failed.", mfaEnabled: "Two-factor authentication is enabled.", mfaDisabled: "Two-factor authentication was removed.", mfaUnenrollCode: "Verify a code from your authenticator app to remove two-factor authentication.",
+    saveSearchesAction: "Save this search", saveSearchSignIn: "Sign in to save your filters.", searchCityLabel: "Search", searchSaved: "Search saved.", allProperties: "All properties",
+    reportListing: "Report listing", reportReason: "Why are you reporting this listing?", reportDetails: "Add details (optional)", reportSent: "Report sent for review.", reportFailed: "Could not send report.",
+    incorrectInformation: "Incorrect information", listingUnavailable: "This property is unavailable", fraudSuspicion: "Possible fraud", inappropriateListing: "Inappropriate content", otherReason: "Other",
+    requestVerification: "Request seller verification", verificationMessage: "Tell us how you can verify that you own or represent this property.", verificationSent: "Verification request sent for manual review.", verificationPending: "Verification request pending", verifiedSeller: "Verified seller", verificationChecklist: "Before approving, independently confirm the person's identity and their authority to represent or own the property.", verificationRequired: "Apply the roadmap-workflows.sql migration to enable reports and verification.",
+    availabilityStatus: "LISTING AVAILABILITY", available: "Available", rented: "Rented", sold: "Sold", unavailable: "Unavailable", editListing: "Edit listing", deleteMyListing: "Delete listing", saveListing: "Save listing", listingEditReview: "Changes to listing details will be reviewed before the listing is published again.", listingUpdated: "Listing updated and sent for review.",
+    phoneVisibleToPublic: "Show my phone number on my public profile", contactSeller: "Contact seller", callSeller: "Call", whatsappSeller: "WhatsApp", noPublicPhone: "The seller has not shared a phone number.",
+    rescheduleViewing: "Reschedule", viewingRescheduled: "Viewing rescheduled.", rescheduleHelp: "Choose a new date and time.", newViewingDate: "NEW DATE (YYYY-MM-DD)", newViewingTime: "NEW TIME (HH:MM)", invalidViewingDate: "Enter a future date and a valid time.",
+    listingReports: "LISTING REPORTS", verificationRequests: "SELLER VERIFICATION", actionHistory: "ADMIN ACTION HISTORY", reviewing: "Reviewing", resolved: "Resolved", dismissed: "Dismissed", open: "Open", markReviewing: "Mark reviewing", resolveReport: "Resolve", dismissReport: "Dismiss",
+    reviews: "REVIEWS", agentReviews: "AGENT REVIEWS", reviewer: "HAYÁN user", yourRating: "Your rating", stars: "stars", writeReview: "Share your experience with this property...", submitReview: "SUBMIT REVIEW", reviewTitle: "Property review", reviewSignIn: "Sign in to leave a review.", reviewRequired: "Write a short comment before submitting.", noReviews: "No reviews yet. Be the first to share your experience.", bathroomsFilter: "BATHROOMS", parkingAvailable: "Parking available",
+    welcome: "Welcome", searchProperties: "Search properties...", latestListings: "LATEST LISTINGS",
+    results: "RESULTS", properties: "properties", found: "found", noProperties: "No Properties Found",
+    adjustFilters: "Try adjusting your filters or search query", refreshError: "Could not refresh listings",
+    notifications: "NOTIFICATIONS", markAllRead: "Mark All Read", noNotifications: "No Notifications",
+    alertEmpty: "You'll be notified about price drops, new listings, and messages", messages: "MESSAGES",
+    noMessages: "No Messages", startConversation: "Start a conversation from any property listing",
+    noMessagesYet: "No messages yet", conversation: "Conversation", startChat: "Start the conversation",
+    typeMessage: "Type a message...", featured: "FEATURED", propertyNotFound: "Property not found",
+    bedrooms: "Bedrooms", bathrooms: "Bathrooms", area: "Area", aboutProperty: "ABOUT THIS PROPERTY",
+    amenities: "AMENITIES", petFriendly: "Pet Friendly", message: "Message", scheduleViewing: "Schedule Viewing",
+    viewingScheduled: "Viewing Scheduled", addToCalendar: "ADD TO CALENDAR", calendarPermissionTitle: "Calendar access needed", calendarPermissionBody: "Allow calendar access to save this viewing.", calendarUnavailableTitle: "Calendar unavailable", calendarUnavailableBody: "No writable calendar is available on this device.", calendarEventAddedTitle: "Added to calendar", calendarEventAddedBody: "The viewing was added to your calendar.", done: "DONE", selectDate: "SELECT DATE", selectTime: "SELECT TIME",
+    masterAdmin: "Master Admin", editProfile: "Edit Profile", changePassword: "Change Password",
+    createListing: "Create Listing", myViewings: "My Viewings", signOut: "Sign Out", listings: "Listings",
+    totalViews: "Total Views", saved: "Saved", savedProperties: "SAVED PROPERTIES", myListings: "MY LISTINGS",
+    language: "APP LANGUAGE", english: "English", somali: "Somali",
+    currency: "LISTING CURRENCY", usdOnly: "USD - US Dollar", propertyBuyer: "Property Buyer",
+    propertySeller: "Property Seller", propertyRenter: "Property Renter", realEstateAgent: "Real Estate Agent",
+    welcomeBack: "Welcome Back", signInContinue: "Sign in to continue to your account", email: "EMAIL",
+    password: "PASSWORD", forgotPassword: "Forgot Password?", signIn: "SIGN IN", signUp: "Sign Up",
+    createAccount: "Create Account", joinDalka: "Join the HAYÁN community", iAm: "I AM A", fullName: "FULL NAME",
+    phone: "PHONE", createPassword: "Create a password", alreadyAccount: "Already have an account?",
+    checkEmail: "Check Your Email", backToLogin: "BACK TO LOGIN", sendResetLink: "SEND RESET LINK",
+    setNewPassword: "Set New Password", chooseSecurePassword: "Choose a secure password for your HAYÁN account.",
+    updatePassword: "UPDATE PASSWORD", passwordUpdated: "Password Updated",
+    passwordChanged: "Your password has been changed successfully.", currentPassword: "CURRENT PASSWORD",
+    newPassword: "NEW PASSWORD", confirmNewPassword: "CONFIRM NEW PASSWORD", update: "UPDATE PASSWORD",
+    createListingTitle: "CREATE LISTING", propertyType: "PROPERTY TYPE", listingType: "LISTING TYPE",
+    priceUsd: "PRICE (USD)", monthlyRent: "Monthly rent", salePrice: "Sale price", addAmenities: "AMENITIES",
+    addPhotos: "Add Photos", addPhotosHint: "Add up to 10 property photos.", title: "TITLE", type: "TYPE",
+    price: "PRICE", location: "LOCATION", description: "DESCRIPTION", sizeSquareMeters: "SIZE (m2)",
+    choosePhotos: "Choose Photos", petFriendlyLabel: "Pet Friendly", changePhoto: "Change Photo",
+    yourName: "Your name", phoneNumber: "Phone number", tellAboutYou: "Tell us about yourself...",
+    role: "ROLE", filter: "Filter", searchResults: "Search results", sqm: "m2", perMonth: "/month",
+    listingApproved: "Listing approved", priceReduced: "Price reduced", newMessage: "New message",
+    viewingConfirmed: "Viewing confirmed", viewingCancelled: "Viewing cancelled", tryAgain: "Try again",
+    noInternet: "Check your internet connection and try again.", confirmViewing: "CONFIRM VIEWING",
+    forSale: "For Sale", forRent: "For Rent", address: "ADDRESS", city: "CITY",
+    locationAdded: "LOCATION ADDED", useCurrentLocation: "USE CURRENT LOCATION",
+    detailsStep: "Details", pricingStep: "Pricing", featuresStep: "Features", reviewStep: "Review",
+    titleHint: "e.g. Modern family home", descriptionHint: "Describe the property in detail...",
+    streetAddress: "Street address", cityName: "City name", totalArea: "Total area",
+    numberBedrooms: "Number of bedrooms", numberBathrooms: "Number of bathrooms",
+    publishListing: "PUBLISH LISTING", publishing: "PUBLISHING...", continue: "CONTINUE",
+    confirm: "Confirm", signInRequired: "Sign in required", signInToContact: "Please sign in to contact the property owner.",
+    signInToSchedule: "Please sign in to schedule a viewing.", couldNotSchedule: "Could not schedule viewing",
+    couldNotPublish: "Could not publish listing", checkListing: "Check listing details",
+    positiveNumbers: "Price and area must be positive numbers.", wholeNumbers: "Bedrooms and bathrooms must be whole numbers.",
+    photoAccess: "Photo access needed", allowPhotoAccess: "Allow photo library access to add listing photos.",
+    couldNotOpenPhotos: "Could not open photos", choosePhotosCount: "Choose Photos",
+    addPhotosAndVideos: "Add Photos", locationPermission: "Location permission is required to add your location.",
+    viewingRequest: "Your viewing request has been sent.", views: "views", apartment: "Apartment", house: "House",
+    villa: "Villa", penthouse: "Penthouse", land: "Land", pool: "Pool", gym: "Gym", concierge: "Concierge",
+    parking: "Parking", garden: "Garden", terrace: "Terrace", wineCellar: "Wine cellar", smartHome: "Smart home",
+    fireplace: "Fireplace", waterfront: "Waterfront", modernFamilyHome: "e.g. Modern family home",
+    mogadishuHargeisa: "e.g. Mogadishu, Hargeisa", saveChanges: "SAVE CHANGES", saving: "SAVING...",
+    emailAddress: "EMAIL ADDRESS", confirmPassword: "Confirm password",
+    fillFields: "Please fill in all fields", minimumPassword: "New password must be at least 8 characters",
+    passwordsMismatch: "New passwords do not match", failedChangePassword: "Failed to change password",
+    luxuryRealEstate: "REAL ESTATE", noAccount: "Don't have an account?", requiredFields: "Please fill in all required fields",
+    passwordAtLeast8: "Password must be at least 8 characters", registrationFailed: "Registration failed",
+    confirmationEmail: "Check your email for a confirmation link, then sign in.", enterEmail: "Please enter your email address",
+    unableResetLink: "Unable to send reset link", resetSentPrefix: "We've sent a password reset link to",
+    resetSentSuffix: "Please check your inbox and follow the instructions.", forgotInstructions: "Enter your email address and we'll send you a link to reset your password.",
+    forgotPasswordTitle: "Forgot Password", enterPassword: "Enter your password", loginFailed: "Login failed",
+    buyerRole: "Buyer", sellerRole: "Seller", renterRole: "Renter", buyerRoleDesc: "Looking to purchase property",
+    sellerRoleDesc: "List your property for sale", renterRoleDesc: "Find your next rental",
+    filters: "FILTERS", clear: "Clear",
+    priceRange: "PRICE RANGE", minimum: "Min", maximum: "Max", noLimit: "No limit",
+    bedroomsFilter: "BEDROOMS", petFriendlyFilter: "PET FRIENDLY", petFriendlyOnly: "Pet friendly only",
+    searchCity: "Search by city...", applyFilters: "APPLY FILTERS", justNow: "Just now",
+    hoursAgo: "{{count}}h ago", daysAgo: "{{count}}d ago", newListing: "New listing",
+    listingApprovedBody: "Your property listing is now visible.", newListingBody: "A new property listing is available.",
+    priceDropBody: "A saved property's asking price has been reduced.", viewingConfirmedBody: "Your property viewing has been confirmed.",
+    viewingCancelledBody: "Your property viewing has been cancelled.", messageSendFailed: "Message could not be sent",
+    ownerControls: "OWNER CONTROLS",
+    listingModeration: "Listing moderation", reviewProperties: "Review and manage all properties",
+    userManagement: "User management", manageRoles: "Manage roles and access",
+    propertyManagement: "PROPERTY MANAGEMENT", searchUsers: "Search name, email, or role", roleLabel: "ROLE",
+    users: "Users", conversations: "Conversations", viewingRequests: "VIEWING REQUESTS", loadingListings: "Loading listings...", all: "All",
+    pending: "Pending", approved: "Approved", rejected: "Rejected", suspended: "Suspended",
+    suspend: "Suspend", restore: "Restore", cancel: "Cancel", delete: "Delete",
+    confirmedStatus: "Confirmed", cancelledStatus: "Cancelled", requester: "Requested by",
+    noViewings: "No viewing requests yet", cancelViewing: "Cancel viewing", cancelViewingPrompt: "Cancel this viewing request?",
+    pastViewings: "Past", viewingsDescription: "Appointments and requests in one place.", viewingsEmptyDescription: "Your scheduled property visits will appear here.",
+    incomingViewing: "Incoming request", yourViewingRequest: "Your request", confirmViewingPrompt: "Confirm this appointment with the requester?", refreshSchedule: "Refresh appointments",
+    viewingSlotTaken: "This time is no longer available. Choose another time.",
+    keepViewing: "Keep request",
+    searchConversations: "Search your chats...", noChatMatches: "No matching conversations",
+    followers: "Followers", following: "Following", follow: "Follow", unfollow: "Following",
+    publicProfile: "Public profile", viewSellerProfile: "View seller profile", loadingProfile: "Loading profile...",
+    profileUnavailable: "This profile is unavailable", noFollowers: "No followers yet", noFollowing: "Not following anyone yet",
+    couldNotFollow: "Could not update follow status",
+    updateFailed: "Update failed", deleteListingPrompt: "Delete listing?", deleteListingWarning: "This permanently removes the property listing.",
+    deleteFailed: "Delete failed", ownerAccount: "Owner account", cannotChangeOwnRole: "You cannot change your own role here.",
+    changeUserRole: "Change user role", currentRole: "current", cannotSuspendOwnAccount: "You cannot suspend your own account.",
+    suspendAccount: "Suspend account?", restoreAccount: "Restore account?", userUpdateFailed: "User update failed",
+    viewingUpdateFailed: "Viewing update failed",
+    propertyLabel: "Property", userLabel: "User", buyerRolePicker: "Buyer", sellerRolePicker: "Seller",
+    renterRolePicker: "Renter", agentRolePicker: "Agent", loadAdminFailed: "Could not load admin data",
+    somethingWentWrong: "Something went wrong", reloadToContinue: "Reload the app to continue.",
+    errorDetails: "Error details", closeErrorDetails: "Close error details", errorLabel: "Error", stackTrace: "Stack trace",
+    guest: "Guest", unknownUser: "User", propertyViewing: "Property viewing", you: "You", propertyOwner: "Property owner", theater: "Theater", guestHouse: "Guest house",
+    rooftopLounge: "Rooftop lounge", dock: "Dock", library: "Library", mountainViews: "Mountain views",
+    gatedCommunity: "Gated community", utilitiesReady: "Utilities ready", notFoundTitle: "This screen doesn't exist.", goHome: "Go to home screen!",
+  },
+  so: {
+    discover: "Raadi", chat: "Fariimo", alerts: "Ogeysiisyo", profile: "Akoon", mapSearch: "Khariidadda", noMapListings: "Weli ma jiraan guryo leh goob khariidad.", recommendedForYou: "GURYO AAN KUGULA TALINAYO", unlockApp: "FUR HAYÁN", agentDirectory: "Raadi dallaal", mortgageCalculator: "Xisaabiyaha amaahda guri", homePrice: "Qiimaha guriga (USD)", downPaymentPercent: "Lacagta hore (%)", annualInterest: "Ribada sannadlaha (%)", loanTermYears: "Muddada amaahda (sannado)", monthlyPaymentEstimate: "Qiyaasta BIXINTA BISHII", loanAmount: "Qadarka amaahda",
+    savedSearches: "Raadisyada la keydiyey", noSavedSearches: "Weli raadis lama keydin.", savedSearchSetup: "Gal akoonkaaga oo marka hore ku dabaq migration-ka raadisyada.", collections: "Ururinta guryaha", createCollection: "Samee ururin", collectionName: "Magaca ururinta", noCollections: "Samee ururin aad guryaha keydsan ugu kooxayso.", addSavedHomes: "Ku dar guryaha keydsan", removeFromCollection: "Ka saar ururinta", collectionSetup: "Marka hore mari roadmap-completion migration-ka HAYÁN.", notificationSettings: "Dejinta ogeysiisyada", pushNotifications: "Ogeysiisyada telefoonka", pushNotificationsDescription: "Hel ogeysiisyo guryo cusub, qiimo-dhimis, fariimo iyo booqashooyin xataa marka HAYÁN xiran yahay. Push-ku wuxuu u baahan yahay EAS development build ama app store; Expo Go kama shaqeeyo.", enablePush: "DAAR OGEYSIISYADA", disablePush: "KA DAMI TELEFOONKAN", pushEnabled: "Ogeysiisyada telefoonkan waa la daartay.", pushDisabled: "Ogeysiisyada telefoonkan waa la damiyey.", pushPermissionDenied: "Dejinta iPhone-ka ka oggolow ogeysiisyada si aad u daarato.", pushProjectIdMissing: "Push wuxuu u baahan yahay EAS project ID. Deji EXPO_PUBLIC_EAS_PROJECT_ID marka app-ka EAS lagu xiro.", pushMobileOnly: "Ogeysiisyada push waxay ka shaqeeyaan app-ka iPhone iyo Android.", pushUnavailable: "Ogeysiisyada telefoonka lama dejin karin.", securitySettings: "Dejinta amniga", biometricUnlock: "Qufulka Face ID/faro", biometricUnlockDescription: "Dalbo Face ID ama aqoonsiga telefoonka marka app-ka HAYÁN dib loo furo. Kani waa quful gudaha app-ka ah.", enableBiometric: "DAAR QUFULKA AQOONSIGA", disableBiometric: "DAMI QUFULKA AQOONSIGA", biometricUnavailable: "Marka hore Face ID ama aqoonsiga faraha ka daar dejinta telefoonka.", biometricEnabled: "Qufulka aqoonsiga waa la daartay.", biometricDisabled: "Qufulka aqoonsiga waa la damiyey.", mfaTitle: "Xaqiijin laba-tallaabo ah", mfaDescription: "Isticmaal koodh app xaqiijin ah markaad gelayso akoonka.", enableMfa: "DEJI APP-KA XAQIIJINTA", disableMfa: "KA SAAR XAQIIJINTA", mfaSecret: "Furaha gacanta lagu geliyo", mfaCode: "Koodhka xaqiijinta", mfaVerifySetup: "XAQIIJI OO DAAR", mfaChallengeTitle: "Xaqiiji inaad adiga tahay", mfaChallengeBody: "Geli koodhka 6-god ah ee app-ka xaqiijinta.", verifyCode: "XAQIIJI KOODHKA", mfaCodeInvalid: "Geli koodhka 6-god ah ee hadda shaqaynaya.", mfaSetupFailed: "Dejinta app-ka xaqiijinta ma bilaaban.", mfaVerifyFailed: "Xaqiijinta koodhka way fashilantay.", mfaEnabled: "Xaqiijinta laba-tallaabo waa la daartay.", mfaDisabled: "Xaqiijinta laba-tallaabo waa laga saaray.", mfaUnenrollCode: "Geli koodhka app-ka xaqiijinta si aad u damiso.",
+    saveSearchesAction: "Keydi raadintan", saveSearchSignIn: "Gal si aad u keydsato shaandhaynta.", searchCityLabel: "Raadis", searchSaved: "Raadinta waa la keydiyey.", allProperties: "Dhammaan guryaha",
+    reportListing: "Soo sheeg xayeysiiska", reportReason: "Maxaad uga warbixinaysaa xayeysiiskan?", reportDetails: "Faahfaahin ku dar (ikhtiyaari)", reportSent: "Warbixinta waa la diray si loo eego.", reportFailed: "Warbixinta lama diri karin.",
+    incorrectInformation: "Xog khaldan", listingUnavailable: "Gurigani ma bannaana", fraudSuspicion: "Khiyaano suuragal ah", inappropriateListing: "Xayeysiis aan habboonayn", otherReason: "Sabab kale",
+    requestVerification: "Codso xaqiijinta iibiyaha", verificationMessage: "Noo sheeg sida loo xaqiijin karo inaad gurigan leedahay ama wakiil ka tahay.", verificationSent: "Codsiga xaqiijinta waa la diray si gacanta loogu eego.", verificationPending: "Codsiga xaqiijintu wuu socdaa", verifiedSeller: "Iibiyaha waa la xaqiijiyey", verificationChecklist: "Ka hor ansixinta, si madax-bannaan u xaqiiji qofka iyo inuu awood u leeyahay inuu guriga matalo ama leeyahay.", verificationRequired: "Marka hore mari roadmap-workflows.sql si warbixinaha iyo xaqiijintu u shaqeeyaan.",
+    availabilityStatus: "XAALADDA GURIGA", available: "Waa bannaan yahay", rented: "Waa la kireeyey", sold: "Waa la iibiyey", unavailable: "Hadda lama heli karo", editListing: "Wax ka beddel xayeysiiska", deleteMyListing: "Tirtir xayeysiiska", saveListing: "Keydi xayeysiiska", listingEditReview: "Isbeddellada xogta dib ayaa loo eegi doonaa ka hor inta aan xayeysiiska dib loo daabicin.", listingUpdated: "Xayeysiiska waa la beddelay, dib ayaa loo eegayaa.",
+    phoneVisibleToPublic: "Lambarkayga tus boggayga dadweynaha", contactSeller: "La xiriir iibiyaha", callSeller: "Wac", whatsappSeller: "WhatsApp", noPublicPhone: "Iibiyuhu lambarkiisa ma uusan soo bandhigin.",
+    rescheduleViewing: "Beddel waqtiga", viewingRescheduled: "Waqtiga booqashada waa la beddelay.", rescheduleHelp: "Dooro taariikh iyo waqti cusub.", newViewingDate: "TAARIIKH CUSUB (YYYY-MM-DD)", newViewingTime: "WAQTI CUSUB (HH:MM)", invalidViewingDate: "Geli taariikh mustaqbal ah iyo waqti sax ah.",
+    listingReports: "WARBIXINNADA XAYEYSIISYADA", verificationRequests: "XAQIIJINTA IIBIYAHA", actionHistory: "TAARIIKHDA FICILLADA MAAMULKA", reviewing: "Waa la eegayaa", resolved: "La xalliyey", dismissed: "La xiray", open: "Furan", markReviewing: "Calaamadee in la eegayo", resolveReport: "Xalli", dismissReport: "Xir warbixinta",
+    reviews: "QIIMAYNTA", agentReviews: "QIIMAYNTA DALLAALKA", reviewer: "Isticmaale HAYÁN", yourRating: "Qiimayntaada", stars: "xiddigood", writeReview: "Ka warran waayo-aragnimadaada gurigan...", submitReview: "DIR QIIMAYNTA", reviewTitle: "Qiimaynta guriga", reviewSignIn: "Gal si aad qiimayn uga tagto.", reviewRequired: "Qor faallo gaaban ka hor dirista.", noReviews: "Weli qiimayn ma jirto. Noqo qofka ugu horreeya.", bathroomsFilter: "MUSQULAHA", parkingAvailable: "Baarkin leh",
+    welcome: "Soo dhowow", searchProperties: "Raadi guryo...", latestListings: "GURYAHA CUSUB",
+    results: "NATIIJOOYINKA", properties: "guri", found: "la helay", noProperties: "Guryo lama helin",
+    adjustFilters: "Beddel shaandhaynta ama erayga raadinta", refreshError: "Guryaha lama cusboonaysiin",
+    notifications: "OGEYSIISYO", markAllRead: "Dhammaan akhri", noNotifications: "Ogeysiisyo ma jiraan",
+    alertEmpty: "Waxaad heli doontaa ogeysiisyo marka qiime dhaco, guri cusub yimaado ama fariin timaaddo",
+    messages: "FARIIMAHA", noMessages: "Fariimo ma jiraan",
+    startConversation: "Ka bilow wada sheekaysi xayaysiis guri kasta", noMessagesYet: "Weli fariimo ma jiraan",
+    conversation: "Wada sheekaysi", startChat: "Bilow wada sheekaysiga", typeMessage: "Qor fariin...",
+    featured: "GURIYAHA LA SOO BANDHIGAY", propertyNotFound: "Guriga lama helin", bedrooms: "Qolal jiif",
+    bathrooms: "Musqulo", area: "Baaxad", aboutProperty: "FAAHFAAHINTA GURIGA", amenities: "ADEEGYADA",
+    petFriendly: "Xayawaan waa la oggol yahay", message: "Fariin u dir", scheduleViewing: "Qabso booqasho",
+    viewingScheduled: "Booqashada waa la qabtay", addToCalendar: "KU DAR JADWALKA", calendarPermissionTitle: "Oggolaanshaha jadwalka ayaa loo baahan yahay", calendarPermissionBody: "Oggolow jadwalka si booqashadan loogu kaydiyo.", calendarUnavailableTitle: "Jadwal lama heli karo", calendarUnavailableBody: "Telefoonkan lagama helin jadwal wax lagu qori karo.", calendarEventAddedTitle: "Jadwalka waa lagu daray", calendarEventAddedBody: "Booqashada jadwalkaaga ayaa lagu daray.", done: "DHAMMAAD", selectDate: "DOORO TAARIIKH",
+    selectTime: "DOORO WAQTIGA", masterAdmin: "Maamulka guud", editProfile: "Wax ka beddel akoonka",
+    changePassword: "Beddel erayga sirta ah", createListing: "Ku dar guri", myViewings: "Booqashooyinkayga",
+    signOut: "Ka bax", listings: "Xayaysiisyada", totalViews: "Wadarta daawashada", saved: "La keydiyey",
+    savedProperties: "GURYAHAYGA LA KEYDIYAY", myListings: "XAYAYSIISYADAYDA", language: "LUQADDA APP-KA",
+    english: "Ingiriisi", somali: "Soomaali", currency: "LACAGTA XAYAYSIISKA", usdOnly: "USD - Doollar Maraykan",
+    propertyBuyer: "Iibsade guri", propertySeller: "Iibiye guri", propertyRenter: "Kireyste guri",
+    realEstateAgent: "Dallaal hanti-ma-guurto", welcomeBack: "Soo dhowow", signInContinue: "Gal si aad u sii wadato",
+    email: "IIMAYL", password: "ERAYGA SIRTA AH", forgotPassword: "Ma illowday erayga sirta ah?",
+    signIn: "GAL", signUp: "Is diiwaangeli", createAccount: "Samee akoon", joinDalka: "Ku soo biir bulshada HAYÁN",
+    iAm: "WAXAAN AHAY", fullName: "MAGACA OO DHAMMAYSTIRAN", phone: "TELEFOON",
+    createPassword: "Samee eray sir ah", alreadyAccount: "Hore akoon ma u lahayd?", checkEmail: "Hubi iimaylkaaga",
+    backToLogin: "KU NOQO GALITAANKA", sendResetLink: "DIR XIRIIRKA DIB-U-DEJINTA",
+    setNewPassword: "Deji eray sir cusub", chooseSecurePassword: "Dooro eray sir ah oo adag oo akoonka HAYÁN ah.",
+    updatePassword: "CUSBOONAYSII ERAYGA SIRTA AH", passwordUpdated: "Erayga sirta ah waa la beddelay",
+    passwordChanged: "Erayga sirta ah si guul leh ayaa loo beddelay.", currentPassword: "ERAYGA SIRTA AH EE HORE",
+    newPassword: "ERAY SIR CUSUB", confirmNewPassword: "XAQIIJI ERAYGA SIRTA CUSUB",
+    update: "CUSBOONAYSII", createListingTitle: "KU DAR GURI", propertyType: "NOOCA GURIGA",
+    listingType: "NOOCA XAYAYSIISKA", priceUsd: "QIIMAHA (USD)", monthlyRent: "Kirada bishii",
+    salePrice: "Qiimaha iibka", addAmenities: "ADEEGYADA", addPhotos: "Ku dar sawirro",
+    addPhotosHint: "Ku dar ilaa 10 sawir oo guriga ah.", title: "CINWAAN", type: "NOOC",
+    price: "QIIME", location: "GOOBTA", description: "SHARAXAAD", sizeSquareMeters: "BAAXAD (m2)",
+    choosePhotos: "Dooro sawirro", petFriendlyLabel: "Xayawaan waa la oggol yahay", changePhoto: "Beddel sawirka",
+    yourName: "Magacaaga", phoneNumber: "Lambarka telefoonka", tellAboutYou: "Wax yar nooga sheeg naftaada...",
+    role: "DOORKA", filter: "Shaandhee", searchResults: "Natiijooyinka raadinta", sqm: "m2", perMonth: "/bishii",
+    listingApproved: "Guriga waa la ansixiyey", priceReduced: "Qiimuhu wuu dhacay", newMessage: "Fariin cusub",
+    viewingConfirmed: "Booqashada waa la xaqiijiyey", viewingCancelled: "Booqashada waa la joojiyey",
+    tryAgain: "Mar kale isku day", noInternet: "Hubi internetkaaga oo mar kale isku day.",
+    confirmViewing: "XAQIIJI BOOQASHADA", forSale: "Iib", forRent: "Kiro", address: "CINWAANKA",
+    city: "MAGAALADA", locationAdded: "GOOBTA WAA LA DARAY", useCurrentLocation: "ISTICMAAL GOOBTA AAD JOOGTO",
+    detailsStep: "Faahfaahin", pricingStep: "Qiime", featuresStep: "Adeegyo", reviewStep: "Dib u eeg",
+    titleHint: "Tusaale: Guri qoys oo casri ah", descriptionHint: "Si faahfaahsan u sharax guriga...",
+    streetAddress: "Cinwaanka waddada", cityName: "Magaca magaalada", totalArea: "Baaxadda guud",
+    numberBedrooms: "Tirada qolalka jiifka", numberBathrooms: "Tirada musqulaha",
+    publishListing: "DAABAC XAYAYSIISKA", publishing: "WAA LA DAABACAYAA...", continue: "SII WAD",
+    confirm: "Xaqiiji", signInRequired: "Galitaan ayaa loo baahan yahay",
+    signInToContact: "Gal si aad ula xiriirto qofka guriga leh.",
+    signInToSchedule: "Gal si aad u qabsato booqashada.", couldNotSchedule: "Booqashada lama qabsan karin",
+    couldNotPublish: "Xayaysiiska lama daabici karin", checkListing: "Hubi xogta guriga",
+    positiveNumbers: "Qiimaha iyo baaxaddu waa inay noqdaan tiro ka weyn eber.",
+    wholeNumbers: "Qolalka jiifka iyo musquluhu waa inay noqdaan tirooyin dhan.",
+    photoAccess: "Oggolaanshaha sawirrada ayaa loo baahan yahay",
+    allowPhotoAccess: "Oggolow gelitaanka sawirrada si aad sawirro ugu darto xayaysiiska.",
+    couldNotOpenPhotos: "Sawirrada lama furi karin", choosePhotosCount: "Dooro sawirro",
+    addPhotosAndVideos: "Ku dar sawirro", locationPermission: "Oggolow goobta si aad ugu darto halka aad joogto.",
+    viewingRequest: "Codsiga booqashada waa la diray.", views: "daawasho", apartment: "Guri dabaq ah",
+    house: "Guri", villa: "Daar", penthouse: "Guri dabaq sare ah", land: "Dhul", pool: "Barkad dabaal",
+    gym: "Goob jimicsi", concierge: "Adeeg qaabilaad", parking: "Baarkin", garden: "Beer",
+    terrace: "Barxad", wineCellar: "Qol kayd", smartHome: "Guri casri ah", fireplace: "Meel dab lagu shido",
+    waterfront: "Biyo dhinac yaal", modernFamilyHome: "Tusaale: Guri qoys oo casri ah",
+    mogadishuHargeisa: "Tusaale: Muqdisho, Hargeysa", saveChanges: "KEYDI ISBEDDELLADA",
+    saving: "WAA LA KEYDINAYAA...", emailAddress: "IIMAYLKA",
+    confirmPassword: "Xaqiiji erayga sirta ah", fillFields: "Buuxi dhammaan meelaha bannaan",
+    minimumPassword: "Erayga sirta cusubi waa inuu ka koobnaadaa ugu yaraan 8 xaraf",
+    passwordsMismatch: "Erayada sirta ahi isma laha", failedChangePassword: "Erayga sirta ah lama beddeli karin",
+    luxuryRealEstate: "HANTI-MA-GUURTO", noAccount: "Akoon ma lihid?", requiredFields: "Buuxi dhammaan meelaha loo baahan yahay",
+    passwordAtLeast8: "Erayga sirta ahi waa inuu ka koobnaadaa ugu yaraan 8 xaraf", registrationFailed: "Diiwaangelintu way fashilantay",
+    confirmationEmail: "Hubi iimaylkaaga, raac xiriirka xaqiijinta, kadibna gal.", enterEmail: "Geli iimaylkaaga",
+    unableResetLink: "Xiriirka dib-u-dejinta lama diri karin", resetSentPrefix: "Xiriirka dib-u-dejinta erayga sirta ah waxaa loo diray",
+    resetSentSuffix: "Hubi sanduuqa iimaylkaaga oo raac tilmaamaha.", forgotPasswordTitle: "Ma illowday erayga sirta ah?",
+    enterPassword: "Geli erayga sirta ah", loginFailed: "Galitaanku wuu fashilmay",
+    forgotInstructions: "Geli iimaylkaaga si aan kuugu dirno xiriir aad erayga sirta ah dib ugu dejiso.",
+    buyerRole: "Iibsade", sellerRole: "Iibiye", renterRole: "Kireyste", buyerRoleDesc: "Raadinaya guri uu iibsado",
+    sellerRoleDesc: "Guri iib ah xayaysii", renterRoleDesc: "Raadinaya guri uu kireysto",
+    filters: "SHAANDHEEYN", clear: "Nadiifi",
+    priceRange: "XADKA QIIMAHA", minimum: "Ugu yar", maximum: "Ugu badan", noLimit: "Xad ma leh",
+    bedroomsFilter: "QOLALKA JIIFKA", petFriendlyFilter: "XAYAWAAN LA OGOL YAHAY", petFriendlyOnly: "Kaliya guryaha xayawaanka oggol",
+    searchCity: "Magaalo ka raadi...", applyFilters: "KU DABAQ SHAANDHAYNTA", justNow: "Hadda",
+    hoursAgo: "{{count}} saac kahor", daysAgo: "{{count}} maalmood kahor", newListing: "Guri cusub",
+    listingApprovedBody: "Xayaysiiska gurigaaga hadda waa muuqdaa.", newListingBody: "Guri cusub ayaa la soo xayaysiiyey.",
+    priceDropBody: "Qiimaha guriga aad keydisay waa la dhimay.", viewingConfirmedBody: "Booqashada guriga waa la xaqiijiyey.",
+    messageSendFailed: "Fariinta lama diri karin",
+    viewingCancelledBody: "Booqashada guriga waa la joojiyey.", ownerControls: "MAAMULKA MULKIILAHA",
+    listingModeration: "Dib u eegista xayaysiisyada", reviewProperties: "Dib u eeg oo maamul guryaha",
+    userManagement: "Maamulka isticmaaleyaasha", manageRoles: "Maamul doorarka iyo gelitaanka",
+    propertyManagement: "MAAMULKA GURYAHA", searchUsers: "Raadi magac, iimayl ama door", roleLabel: "DOORKA",
+    users: "Isticmaaleyaal", conversations: "Wada sheekaysi", viewingRequests: "CODSASHADA BOOQASHADA", loadingListings: "Guryaha waa la soo rarayaa...",
+    all: "Dhammaan", pending: "Sugaya", approved: "La ansixiyey", rejected: "La diiday",
+    suspended: "La hakiyey", suspend: "Haki", restore: "Soo celi", cancel: "Jooji", delete: "Tirtir",
+    confirmedStatus: "La xaqiijiyey", cancelledStatus: "La joojiyey", requester: "Waxaa codsaday",
+    noViewings: "Weli booqasho lama qabsan", cancelViewing: "Jooji booqashada",
+    pastViewings: "Kuwii hore", viewingsDescription: "Codsiyada iyo ballamaha oo hal meel yaal.", viewingsEmptyDescription: "Booqashooyinka aad qabsato halkan ayay ka muuqan doonaan.",
+    incomingViewing: "Codsi kuu yimid", yourViewingRequest: "Codsigaaga", confirmViewingPrompt: "Ma xaqiijinaysaa ballantan?", refreshSchedule: "Cusboonaysii booqashooyinka",
+    viewingSlotTaken: "Waqtigan hadda waa la qabsaday. Dooro waqti kale.",
+    cancelViewingPrompt: "Ma rabtaa inaad joojiso codsigan booqashada?", keepViewing: "Ka noqo",
+    searchConversations: "Ka raadi sheekaysiyadaada...", noChatMatches: "Wada sheekaysi ku habboon lama helin",
+    followers: "Raacayaal", following: "La raacayo", follow: "Raac", unfollow: "La raacayo",
+    publicProfile: "Bogga dadweynaha", viewSellerProfile: "Eeg bogga iibiyaha", loadingProfile: "Bogga waa la soo rarayaa...",
+    profileUnavailable: "Boggan lama heli karo", noFollowers: "Weli raacayaal ma jiraan", noFollowing: "Cidna ma raacaysid",
+    couldNotFollow: "Raacista lama beddeli karin",
+    updateFailed: "Cusboonaysiintu way fashilantay", deleteListingPrompt: "Ma tirtiraysaa xayaysiiska?",
+    deleteListingWarning: "Xayaysiiska gurigan si joogto ah ayaa loo tirtirayaa.", deleteFailed: "Tirtiristu way fashilantay",
+    ownerAccount: "Akoonka maamulka", cannotChangeOwnRole: "Halkan kama beddeli kartid doorka akoonkaaga.",
+    changeUserRole: "Beddel doorka isticmaalaha", currentRole: "hadda",
+    cannotSuspendOwnAccount: "Ma hakin kartid akoonkaaga.", suspendAccount: "Ma hakisaa akoonka?",
+    restoreAccount: "Ma soo celisaa akoonka?", userUpdateFailed: "Cusboonaysiinta isticmaaluhu way fashilantay",
+    viewingUpdateFailed: "Cusboonaysiinta booqashadu way fashilantay",
+    propertyLabel: "Guri", userLabel: "Isticmaale", buyerRolePicker: "Iibsade", sellerRolePicker: "Iibiye",
+    renterRolePicker: "Kireyste", agentRolePicker: "Dallaal", loadAdminFailed: "Xogta maamulka lama soo qaadi karin",
+    somethingWentWrong: "Cilad ayaa dhacday", reloadToContinue: "Dib u fur app-ka si aad u sii wadato.",
+    errorDetails: "Faahfaahinta ciladda", closeErrorDetails: "Xir faahfaahinta ciladda", errorLabel: "Cilad", stackTrace: "Raadka ciladda",
+    guest: "Marti", unknownUser: "Isticmaale", propertyViewing: "Booqashada guriga", you: "Adiga", propertyOwner: "Milkiilaha guriga", theater: "Goob filimaan",
+    guestHouse: "Guri marti", rooftopLounge: "Barxad saqafka sare", dock: "Deked yar",
+    library: "Maktabad", mountainViews: "Muuqaal buuro", gatedCommunity: "Xaafad xiran",
+    utilitiesReady: "Adeegyada aasaasiga ah waa diyaar", notFoundTitle: "Boggan lama helin.", goHome: "Ku noqo bogga hore.",
+  },
+} as const;
+
+interface LanguageContextValue {
+  language: Language;
+  isReady: boolean;
+  setLanguage: (language: Language) => Promise<void>;
+  t: (key: TranslationKey) => string;
+}
+
+const LanguageContext = createContext<LanguageContextValue | null>(null);
+
+const AMENITY_TRANSLATIONS: Partial<Record<string, TranslationKey>> = {
+  Pool: "pool", Gym: "gym", Concierge: "concierge", Parking: "parking", Garden: "garden",
+  Terrace: "terrace", "Wine Cellar": "wineCellar", "Smart Home": "smartHome", Fireplace: "fireplace",
+  Waterfront: "waterfront", Theater: "theater", "Guest House": "guestHouse", "Rooftop Lounge": "rooftopLounge",
+  Dock: "dock", Library: "library", "Mountain Views": "mountainViews", "Gated Community": "gatedCommunity",
+  "Utilities Ready": "utilitiesReady",
+};
+
+export function translateAmenity(value: string, t: (key: TranslationKey) => string) {
+  const key = AMENITY_TRANSLATIONS[value];
+  return key ? t(key) : value;
+}
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguageState] = useState<Language>("so");
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    void AsyncStorage.getItem(LANGUAGE_KEY)
+      .then((stored) => {
+        if (stored === "en" || stored === "so") setLanguageState(stored);
+      })
+      .catch(() => undefined)
+      .finally(() => setIsReady(true));
+  }, []);
+
+  const setLanguage = useCallback(async (nextLanguage: Language) => {
+    setLanguageState(nextLanguage);
+    await AsyncStorage.setItem(LANGUAGE_KEY, nextLanguage);
+  }, []);
+  const t = useCallback((key: TranslationKey) => translations[language][key], [language]);
+
+  return (
+    <LanguageContext.Provider value={{ language, isReady, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) throw new Error("useLanguage must be used within LanguageProvider");
+  return context;
+}

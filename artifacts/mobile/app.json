@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "HAYÁN Real Estate",
+    "slug": "dalka",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "dalka",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.dalka.mobile",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Choose photos to include in your property listing.",
+        "NSLocationWhenInUseUsageDescription": "Add the property location to your listing when you choose to do so.",
+        "NSFaceIDUsageDescription": "Use Face ID to unlock HAYÁN on this device.",
+        "NSCalendarsWriteOnlyAccessUsageDescription": "Add your scheduled property viewing to your calendar.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.dalka.mobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "READ_MEDIA_IMAGES",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_VIDEO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose photos to include in your property listing.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Add the property location to your listing when you choose to do so."
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Add scheduled property viewings to your calendar.",
+          "writeOnlyAccess": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use Face ID to unlock HAYÁN on this device."
+        }
+      ],
+      "expo-notifications",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FAF8F5"
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2676f096-3384-45e9-9cdd-bf56282e6d42"
+      }
+    },
+    "owner": "ramzahayaan"
+  }
+}

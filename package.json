@@ -1,0 +1,20 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "node -e \"const fs=require('fs'); ['package-lock.json','yarn.lock'].forEach(f=>{try{fs.rmSync(f,{force:true})}catch{}}); const ua = process.env.npm_config_user_agent || ''; if (!ua.startsWith('pnpm/')) { console.error('Use pnpm instead'); process.exit(1); }\"",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "supabase:connect": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/connect-supabase.ps1",
+    "supabase:migrations": "supabase migration list",
+    "supabase:push": "supabase db push",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+  },
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "supabase": "^2.119.0",
+    "typescript": "~5.9.2"
+  }
+}
