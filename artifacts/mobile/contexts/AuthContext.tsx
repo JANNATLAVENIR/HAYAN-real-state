@@ -51,7 +51,10 @@ async function loadSupabaseUser(id: string, email: string, metadata: Record<stri
     bookmarks: (bookmarkRows ?? []).map((bookmark) => bookmark.property_id),
     isAdmin: Boolean(adminRow?.is_active),
     isSuspended: Boolean(profile?.is_suspended),
-    approvalStatus: profile?.approval_status ?? "pending",
+    // Older Supabase schemas do not have admin approval yet. Preserve access
+    // for existing accounts until the approval migration is applied; once it
+    // is present, pending/rejected states are enforced as stored.
+    approvalStatus: profile?.approval_status ?? "approved",
   };
 }
 
