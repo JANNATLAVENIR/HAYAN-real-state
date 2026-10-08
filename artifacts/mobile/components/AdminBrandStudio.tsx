@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import React from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 
 import { DEFAULT_BRANDING, useBranding, type BrandingSettings } from "@/contexts/BrandingContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -16,8 +16,10 @@ export function AdminBrandStudio() {
   const colors = useColors();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const { settings, isLoading, isSaving, updateDraft, save } = useBranding();
+  const { settings, isLoading, isSaving, syncError, updateDraft, save } = useBranding();
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const [saveNotice, setSaveNotice] = React.useState("");
+  const [saveFailed, setSaveFailed] = React.useState(false);
 
   const change = (key: keyof BrandingSettings, amount: number) => {
     const value = settings[key];
@@ -29,8 +31,12 @@ export function AdminBrandStudio() {
   };
   const saveSettings = async () => {
     const result = await save();
-    if (result.error) Alert.alert(t("updateFailed"), result.error);
-    else Alert.alert("Saved", "Your app layout has been updated.");
+    setSaveFailed(Boolean(result.error));
+    setSaveNotice(result.error ?? "Your app layout is shared with everyone.");
+    if (Platform.OS !== "web") {
+      if (result.error) Alert.alert(t("updateFailed"), result.error);
+      else Alert.alert("Saved", "Your app layout has been updated.");
+    }
   };
   const uploadLogo = async () => {
     if (!user) return;
@@ -134,6 +140,7 @@ export function AdminBrandStudio() {
           {isSaving || isLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Feather name="save" size={16} color={colors.primaryForeground} />}
           <Text style={[styles.saveText, { color: colors.primaryForeground }]}>{isLoading ? "LOADING SETTINGS" : isSaving ? "SAVING..." : "SAVE APP DESIGN"}</Text>
         </Pressable>
+        {syncError || saveNotice ? <Text accessibilityRole="alert" style={[styles.saveNotice, { color: syncError || saveFailed ? colors.destructive : colors.primary }]}>{syncError ?? saveNotice}</Text> : null}
         <Pressable onPress={() => updateDraft(DEFAULT_BRANDING)} style={styles.resetButton}><Text style={[styles.resetText, { color: colors.mutedForeground }]}>Reset preview to defaults</Text></Pressable>
       </View>
     </View>
@@ -156,4 +163,5 @@ const styles = StyleSheet.create({
   controlsCard: { borderWidth: 1, borderRadius: 14, marginHorizontal: 16, padding: 14, marginBottom: 20 }, groupTitle: { fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 1.3, marginBottom: 8 }, fieldLabel: { fontSize: 11, fontFamily: "Inter_500Medium", marginBottom: 6 }, urlInput: { borderWidth: 1, borderRadius: 8, minHeight: 42, paddingHorizontal: 11, fontSize: 12, marginBottom: 8 }, uploadButton: { height: 42, borderWidth: 1, borderRadius: 8, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }, uploadText: { fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5 }, navEditRow: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 8, borderBottomWidth: StyleSheet.hairlineWidth }, navInput: { flex: 1, height: 36, borderWidth: 1, borderRadius: 7, paddingHorizontal: 9, fontSize: 12 },
   settingRow: { minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }, settingLabel: { flex: 1, fontSize: 12, fontFamily: "Inter_500Medium" }, stepper: { flexDirection: "row", alignItems: "center", gap: 9 }, stepButton: { width: 30, height: 30, borderWidth: 1, borderRadius: 8, alignItems: "center", justifyContent: "center" }, valueText: { minWidth: 50, textAlign: "center", fontSize: 11, fontFamily: "Inter_600SemiBold" },
   saveButton: { minHeight: 46, borderRadius: 9, marginTop: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }, saveText: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 0.7 }, resetButton: { alignItems: "center", padding: 12 }, resetText: { fontSize: 11, fontFamily: "Inter_500Medium" },
+  saveNotice: { fontSize: 11, lineHeight: 16, textAlign: "center", marginTop: 10 },
 });

@@ -62,6 +62,7 @@ type BrandingContextValue = {
   settings: BrandingSettings;
   isLoading: boolean;
   isSaving: boolean;
+  syncError: string | null;
   updateDraft: (settings: BrandingSettings) => void;
   save: () => Promise<{ error?: string }>;
 };
@@ -73,6 +74,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState(DEFAULT_BRANDING);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -84,8 +86,26 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
           supabase.from("site_settings").select("value").eq("id", "branding").maybeSingle(),
         ]);
         if (!active) return;
-        if (!remote.error && remote.data?.value) setSettings(normalize(remote.data.value));
-        else if (local) setSettings(normalize(JSON.parse(local)));
+        if (!remote.error && remote.data?.value) {
+          const shared = normalize(remote.data.value);
+          setSettings(shared);
+          setSyncError(null);
+          void AsyncStorage.setItem("@hayan_branding_settings", JSON.stringify(shared)).catch(() => undefined);
+        } else if (local) {
+          const localSettings = normalize(JSON.parse(local));
+          setSettings(localSettings);
+          // Migrate the admin's previous device-only design into shared storage
+          // the first time the new shared settings table is available.
+          if (user?.isAdmin && user.id) {
+            const { error } = await supabase.from("site_settings").upsert(
+              { id: "branding", value: localSettings, updated_by: user.id },
+              { onConflict: "id" },
+            );
+            setSyncError(error ? `Shared sync failed: ${error.message}` : null);
+          }
+        } else if (remote.error) {
+          setSyncError(`Shared settings could not be loaded: ${remote.error.message}`);
+        }
       } catch {
         // Keep the built-in defaults if neither storage is available.
       } finally {
@@ -93,7 +113,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [user?.id, user?.isAdmin]);
 
   const updateDraft = useCallback((draft: BrandingSettings) => setSettings(normalize(draft)), []);
   const save = useCallback(async () => {
@@ -103,10 +123,11 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     setIsSaving(true);
     const { error } = await supabase.from("site_settings").upsert({ id: "branding", value: settings, updated_by: user.id }, { onConflict: "id" });
     setIsSaving(false);
-    return error ? { error: `Saved on this device only. Apply the site-settings database migration to publish changes to everyone. ${error.message}` } : {};
+    setSyncError(error ? `Shared sync failed: ${error.message}` : null);
+    return error ? { error: `Saved on this device only. Shared Supabase update failed: ${error.message}` } : {};
   }, [settings, user?.id, user?.isAdmin]);
 
-  return <BrandingContext.Provider value={{ settings, isLoading, isSaving, updateDraft, save }}>{children}</BrandingContext.Provider>;
+  return <BrandingContext.Provider value={{ settings, isLoading, isSaving, syncError, updateDraft, save }}>{children}</BrandingContext.Provider>;
 }
 
 export function useBranding() {
