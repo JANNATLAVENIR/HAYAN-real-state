@@ -1,16 +1,15 @@
 import { Feather } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { usePathname, useRouter } from "expo-router";
 import React from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { BrandLockup } from "@/components/BrandLockup";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { useBranding } from "@/contexts/BrandingContext";
 
 type Destination = { href: string; title: string; icon: React.ComponentProps<typeof Feather>["name"]; activePaths: string[] };
-const brandLogo = require("@/assets/images/hayan-logo.png");
 
 export function WebAppShell({ children }: { children: React.ReactNode }) {
   const { width } = useWindowDimensions();
@@ -73,7 +72,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       {desktop ? (
         <View style={[styles.sidebar, { backgroundColor: colors.card, borderRightColor: colors.border }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="HAYÁN Real Estate" onPress={() => router.push("/(tabs)" as never)} style={[styles.brand, { paddingHorizontal: settings.headerPadding }]}>
-            {settings.showLogo ? <Image source={settings.logoUrl ? { uri: settings.logoUrl } : brandLogo} contentFit="contain" style={{ width: settings.logoWidth, height: settings.logoHeight }} /> : null}
+            <BrandLockup settings={settings} foreground={colors.foreground} muted={colors.mutedForeground} />
           </Pressable>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sideScroll}>
             <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>{t("discover")}</Text>

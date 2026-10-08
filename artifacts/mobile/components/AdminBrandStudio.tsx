@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import React from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
@@ -9,8 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadPropertyImage } from "@/lib/supabase";
-
-const logoAsset = require("@/assets/images/hayan-logo.png");
+import { BrandLockup } from "@/components/BrandLockup";
 
 export function AdminBrandStudio() {
   const colors = useColors();
@@ -95,7 +93,7 @@ export function AdminBrandStudio() {
         <View style={styles.phone}>
           <View style={[styles.phoneHeader, { minHeight: settings.headerPadding * 2 + Math.min(settings.logoHeight, 88), paddingHorizontal: 16 }]}>
             <View style={styles.previewBrand}>
-              {settings.showLogo ? <Image source={settings.logoUrl ? { uri: settings.logoUrl } : logoAsset} contentFit="contain" style={{ width: Math.min(settings.logoWidth, 190), height: Math.min(settings.logoHeight, 88) }} /> : null}
+              <BrandLockup settings={{ ...settings, logoWidth: Math.min(settings.logoWidth, 54), logoHeight: Math.min(settings.logoHeight, 54) }} foreground="#26282C" muted="#888A8E" compact />
               {settings.showWelcome ? <Text style={styles.previewWelcome}>{settings.welcomeText}, Hayan</Text> : null}
             </View>
             <Feather name="sliders" size={18} color="#27292D" />
@@ -116,16 +114,22 @@ export function AdminBrandStudio() {
         <Text style={[styles.groupTitle, { color: colors.foreground }]}>LOGO & HEADER</Text>
         <Pressable disabled={uploadingLogo} onPress={() => void uploadLogo()} style={[styles.uploadButton, { borderColor: colors.border }]}>
           {uploadingLogo ? <ActivityIndicator color={colors.primary} /> : <Feather name="upload" size={15} color={colors.primary} />}
-          <Text style={[styles.uploadText, { color: colors.foreground }]}>{uploadingLogo ? "UPLOADING LOGO..." : "UPLOAD A LOGO IMAGE"}</Text>
+          <Text style={[styles.uploadText, { color: colors.foreground }]}>{uploadingLogo ? "UPLOADING SYMBOL..." : "UPLOAD A SYMBOL IMAGE"}</Text>
         </Pressable>
-        <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Custom logo image URL</Text>
-        <TextInput value={settings.logoUrl} onChangeText={(logoUrl) => updateDraft({ ...settings, logoUrl })} placeholder="Paste a public image URL (optional)" placeholderTextColor={colors.mutedForeground} autoCapitalize="none" style={[styles.urlInput, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]} />
+        <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>H symbol image URL (leave blank to use Hayan's symbol)</Text>
+        <TextInput value={settings.logoUrl} onChangeText={(logoUrl) => updateDraft({ ...settings, logoUrl })} placeholder="Use a symbol-only image for editable brand text" placeholderTextColor={colors.mutedForeground} autoCapitalize="none" style={[styles.urlInput, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]} />
+        <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Brand name</Text>
+        <TextInput value={settings.brandName} onChangeText={(brandName) => updateDraft({ ...settings, brandName })} placeholder="HAYAN" placeholderTextColor={colors.mutedForeground} style={[styles.urlInput, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]} />
+        <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Logo subtitle</Text>
+        <TextInput value={settings.brandTagline} onChangeText={(brandTagline) => updateDraft({ ...settings, brandTagline })} placeholder="REAL ESTATE" placeholderTextColor={colors.mutedForeground} style={[styles.urlInput, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]} />
         <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Welcome text</Text>
         <TextInput value={settings.welcomeText} onChangeText={(welcomeText) => updateDraft({ ...settings, welcomeText })} placeholder="Welcome" placeholderTextColor={colors.mutedForeground} style={[styles.urlInput, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]} />
         {numberControl("Logo width", "logoWidth")}
         {numberControl("Logo height", "logoHeight")}
         {numberControl("Header spacing", "headerPadding")}
-        {toggleRow("Show logo", "showLogo")}
+        {toggleRow("Show H symbol", "showLogo")}
+        {toggleRow("Show brand name", "showBrandName")}
+        {toggleRow("Show logo subtitle", "showBrandTagline")}
         {toggleRow("Show welcome text", "showWelcome")}
 
         <Text style={[styles.groupTitle, { color: colors.foreground, marginTop: 18 }]}>NAVIGATION & FOOTER</Text>

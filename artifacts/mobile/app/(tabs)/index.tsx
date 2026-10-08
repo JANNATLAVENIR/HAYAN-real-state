@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
@@ -7,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { PropertyCard } from "@/components/PropertyCard";
+import { BrandLockup } from "@/components/BrandLockup";
 import { FilterSheet } from "@/components/FilterSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -63,7 +63,7 @@ export default function DiscoveryScreen() {
       <View style={[styles.header, { paddingTop: insets.top + webTopPad + 8 }]}>
         <View style={styles.headerTop}>
           <View>
-            {settings.showLogo ? <Image source={settings.logoUrl ? { uri: settings.logoUrl } : require("@/assets/images/hayan-logo.png")} contentFit="contain" style={{ width: settings.logoWidth, height: settings.logoHeight, marginTop: 2 }} accessibilityLabel="HAYÁN Real Estate" /> : null}
+            <BrandLockup settings={settings} foreground={colors.foreground} muted={colors.mutedForeground} compact />
             {settings.showWelcome ? <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
               {user ? `${settings.welcomeText}, ${user.name.split(" ")[0]}` : settings.welcomeText}
             </Text> : null}

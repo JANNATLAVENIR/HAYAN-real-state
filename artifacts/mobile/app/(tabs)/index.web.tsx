@@ -1,11 +1,11 @@
 import { Feather } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 
 import { FilterSheet } from "@/components/FilterSheet";
+import { BrandLockup } from "@/components/BrandLockup";
 import { PropertyCard } from "@/components/PropertyCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -50,7 +50,7 @@ export default function WebDiscoveryScreen() {
         <View style={styles.hero}>
           <View style={styles.heroTop}>
             <View style={styles.headingBlock}>
-              {settings.showLogo ? <Image source={settings.logoUrl ? { uri: settings.logoUrl } : require("@/assets/images/hayan-logo.png")} contentFit="contain" style={{ width: settings.logoWidth, height: settings.logoHeight }} accessibilityLabel="HAYÁN Real Estate" /> : null}
+              <BrandLockup settings={settings} foreground={colors.foreground} muted={colors.mutedForeground} compact />
               {settings.showWelcome ? <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>{user ? `${settings.welcomeText}, ${user.name.split(" ")[0]}` : settings.welcomeText}</Text> : null}
               <Text style={[styles.subtitle, { color: colors.foreground }]}>{t("discover")}</Text>
             </View>

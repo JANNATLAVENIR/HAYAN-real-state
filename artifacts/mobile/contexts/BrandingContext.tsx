@@ -12,6 +12,10 @@ export type BrandingSettings = {
   navHeight: number;
   footerHeight: number;
   showLogo: boolean;
+  brandName: string;
+  brandTagline: string;
+  showBrandName: boolean;
+  showBrandTagline: boolean;
   showWelcome: boolean;
   showNavLabels: boolean;
   showFooter: boolean;
@@ -28,6 +32,10 @@ export const DEFAULT_BRANDING: BrandingSettings = {
   navHeight: 68,
   footerHeight: 28,
   showLogo: true,
+  brandName: "HAYAN",
+  brandTagline: "REAL ESTATE",
+  showBrandName: true,
+  showBrandTagline: true,
   showWelcome: true,
   showNavLabels: true,
   showFooter: true,
@@ -49,6 +57,10 @@ function normalize(value: unknown): BrandingSettings {
     navHeight: number(input.navHeight, 68, 52, 100),
     footerHeight: number(input.footerHeight, 28, 20, 80),
     showLogo: input.showLogo !== false,
+    brandName: typeof input.brandName === "string" ? input.brandName.slice(0, 32) : DEFAULT_BRANDING.brandName,
+    brandTagline: typeof input.brandTagline === "string" ? input.brandTagline.slice(0, 48) : DEFAULT_BRANDING.brandTagline,
+    showBrandName: input.showBrandName !== false,
+    showBrandTagline: input.showBrandTagline !== false,
     showWelcome: input.showWelcome !== false,
     showNavLabels: input.showNavLabels !== false,
     showFooter: input.showFooter !== false,
