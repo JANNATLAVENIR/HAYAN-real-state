@@ -3,7 +3,7 @@
   "name": "HAYÁN Real Estate",
   "short_name": "HAYÁN",
   "description": "Discover and manage exceptional properties with HAYÁN.",
-  "lang": "so",
+  "lang": "en",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
