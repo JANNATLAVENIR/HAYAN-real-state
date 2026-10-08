@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import MapView, { Marker } from "react-native-maps";
 import React, { useEffect, useState } from "react";
 import { Alert, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +12,7 @@ import { useListings } from "@/contexts/ListingsContext";
 import { translateAmenity, useLanguage } from "@/contexts/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { PropertyReviews } from "@/components/PropertyReviews";
+import { PropertyMap } from "@/components/PropertyMap";
 import { supabase } from "@/lib/supabase";
 
 const heroImg = require("@/assets/images/hero-property.png");
@@ -206,13 +206,12 @@ export default function PropertyDetailScreen() {
           ) : null}
 
           {property.latitude !== undefined && property.longitude !== undefined && (
-            <MapView
+            <PropertyMap
               style={styles.map}
-              initialRegion={{ latitude: property.latitude, longitude: property.longitude, latitudeDelta: 0.012, longitudeDelta: 0.012 }}
-              scrollEnabled={false}
-            >
-              <Marker coordinate={{ latitude: property.latitude, longitude: property.longitude }} title={property.title} />
-            </MapView>
+              latitude={property.latitude}
+              longitude={property.longitude}
+              title={property.title}
+            />
           )}
 
           <View style={[styles.typeBadge, { backgroundColor: colors.secondary, borderRadius: colors.radius }]}>

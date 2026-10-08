@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -35,9 +35,10 @@ interface Props {
   isBookmarked?: boolean;
   onBookmark?: () => void;
   compact?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function PropertyCard({ property, isBookmarked, onBookmark, compact }: Props) {
+export function PropertyCard({ property, isBookmarked, onBookmark, compact, style }: Props) {
   const colors = useColors();
   const { language, t } = useLanguage();
   const locale = language === "so" ? "so-SO" : "en-US";
@@ -59,6 +60,7 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact }: Pr
         style={({ pressed }) => [
           styles.compactContainer,
           { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius, opacity: pressed ? 0.95 : 1 },
+          style,
         ]}
         onPress={handlePress}
       >
@@ -81,6 +83,7 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact }: Pr
       style={({ pressed }) => [
         styles.container,
         { backgroundColor: colors.card, borderRadius: colors.radius, opacity: pressed ? 0.97 : 1 },
+        style,
       ]}
       onPress={handlePress}
     >

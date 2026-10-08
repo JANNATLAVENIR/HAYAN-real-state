@@ -6,12 +6,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminTrustConsole } from "@/components/AdminTrustConsole";
+import { AdminBrandStudio } from "@/components/AdminBrandStudio";
 import { useChat } from "@/contexts/ChatContext";
 import { useColors } from "@/hooks/useColors";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
-type AdminUser = { id: string; name: string; email: string; role: string; isSuspended: boolean };
+type AdminUser = { id: string; name: string; email: string; role: string; isSuspended: boolean; approvalStatus: "pending" | "approved" | "rejected" };
 type AdminProperty = { id: string; title: string; city: string; price: number; status: string; ownerId: string };
 type AdminViewing = { id: string; propertyId: string; userId: string; date: string; time: string; status: string };
 
@@ -48,10 +49,15 @@ export default function AdminScreen() {
     setLoadingData(true);
     setLoadError("");
     Promise.all([
-      supabase.from("profiles").select("id, name, email, role, is_suspended").order("created_at", { ascending: false }).limit(1000),
+      supabase.from("profiles").select("id, name, email, role, is_suspended, approval_status").order("created_at", { ascending: false }).limit(1000),
       supabase.from("properties").select("id, title, city, price, status, owner_id").order("created_at", { ascending: false }).limit(1000),
       supabase.from("viewings").select("id, property_id, user_id, date, time, status").order("created_at", { ascending: false }).limit(1000),
-    ]).then(([usersResult, propertiesResult, viewingsResult]) => {
+    ]).then(async ([initialUsersResult, propertiesResult, viewingsResult]) => {
+      let usersResult: any = initialUsersResult;
+      if (usersResult.error?.message?.includes("approval_status")) {
+        const fallback = await supabase!.from("profiles").select("id, name, email, role, is_suspended").order("created_at", { ascending: false }).limit(1000);
+        usersResult = fallback.error ? fallback : { ...fallback, data: (fallback.data ?? []).map((profile) => ({ ...profile, approval_status: "approved" })) };
+      }
       const error = usersResult.error ?? propertiesResult.error ?? viewingsResult.error;
       if (error) throw error;
       setUsers((usersResult.data ?? []).map((profile: any) => ({
@@ -60,6 +66,7 @@ export default function AdminScreen() {
         email: profile.email ?? "",
         role: profile.role,
         isSuspended: Boolean(profile.is_suspended),
+        approvalStatus: profile.approval_status ?? "approved",
       })));
       setListings((propertiesResult.data ?? []).map((property: any) => ({
         id: property.id,
@@ -132,11 +139,12 @@ export default function AdminScreen() {
     ]);
   };
 
-  const updateUser = async (id: string, updates: { role?: string; isSuspended?: boolean }) => {
+  const updateUser = async (id: string, updates: { role?: string; isSuspended?: boolean; approvalStatus?: AdminUser["approvalStatus"] }) => {
     if (!supabase) return;
     const payload = {
       ...(updates.role !== undefined ? { role: updates.role } : {}),
       ...(updates.isSuspended !== undefined ? { is_suspended: updates.isSuspended } : {}),
+      ...(updates.approvalStatus !== undefined ? { approval_status: updates.approvalStatus } : {}),
     };
     const { error } = await supabase.from("profiles").update(payload).eq("id", id);
     if (error) return Alert.alert(t("userUpdateFailed"), error.message);
@@ -144,6 +152,7 @@ export default function AdminScreen() {
       ...profile,
       ...(updates.role !== undefined ? { role: updates.role } : {}),
       ...(updates.isSuspended !== undefined ? { isSuspended: updates.isSuspended } : {}),
+      ...(updates.approvalStatus !== undefined ? { approvalStatus: updates.approvalStatus } : {}),
     } : profile));
   };
 
@@ -197,6 +206,8 @@ export default function AdminScreen() {
       </View>
 
       {loadError ? <Text style={[styles.errorText, { color: colors.destructive }]}>{loadError}</Text> : null}
+
+      <AdminBrandStudio />
 
       <View style={[styles.section, { borderTopColor: colors.border }] }>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("ownerControls")}</Text>
@@ -257,15 +268,26 @@ export default function AdminScreen() {
             </View>
             <View style={styles.listCopy}>
               <Text style={[styles.listTitle, { color: colors.foreground }]}>{profile.name}</Text>
-              <Text style={[styles.listSubtitle, { color: colors.mutedForeground }]}>{profile.email} · {rolesForDisplay(profile.role, t)}{profile.isSuspended ? ` · ${t("suspended")}` : ""}</Text>
+              <Text style={[styles.listSubtitle, { color: colors.mutedForeground }]}>{profile.email} · {rolesForDisplay(profile.role, t)} · {t(profile.approvalStatus)}{profile.isSuspended ? ` · ${t("suspended")}` : ""}</Text>
             </View>
             <View style={styles.userActions}>
               <Pressable onPress={() => changeUserRole(profile)} style={[styles.smallAction, { borderColor: colors.border }]}>
                 <Text style={[styles.smallActionText, { color: colors.foreground }]}>{t("roleLabel")}</Text>
               </Pressable>
-              <Pressable onPress={() => toggleUserSuspension(profile)} style={[styles.smallAction, { borderColor: profile.isSuspended ? colors.primary : colors.destructive }]}>
-                <Text style={[styles.smallActionText, { color: profile.isSuspended ? colors.primary : colors.destructive }]}>{profile.isSuspended ? t("restore").toUpperCase() : t("suspend").toUpperCase()}</Text>
-              </Pressable>
+              {profile.approvalStatus === "pending" ? (
+                <>
+                  <Pressable onPress={() => void updateUser(profile.id, { approvalStatus: "approved" })} style={[styles.smallAction, { borderColor: colors.primary }]}>
+                    <Text style={[styles.smallActionText, { color: colors.primary }]}>{t("approveAccount").toUpperCase()}</Text>
+                  </Pressable>
+                  <Pressable onPress={() => void updateUser(profile.id, { approvalStatus: "rejected" })} style={[styles.smallAction, { borderColor: colors.destructive }]}>
+                    <Text style={[styles.smallActionText, { color: colors.destructive }]}>{t("rejectAccount").toUpperCase()}</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Pressable onPress={() => toggleUserSuspension(profile)} style={[styles.smallAction, { borderColor: profile.isSuspended ? colors.primary : colors.destructive }]}>
+                  <Text style={[styles.smallActionText, { color: profile.isSuspended ? colors.primary : colors.destructive }]}>{profile.isSuspended ? t("restore").toUpperCase() : t("suspend").toUpperCase()}</Text>
+                </Pressable>
+              )}
             </View>
           </View>
         ))}

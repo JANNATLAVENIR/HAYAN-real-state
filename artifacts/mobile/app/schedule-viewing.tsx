@@ -71,6 +71,36 @@ export default function ScheduleViewingScreen() {
 
   const addToCalendar = async () => {
     try {
+      if (Platform.OS === "web") {
+        const [year, month, day] = selectedDate.split("-").map(Number);
+        const [hour, minute] = selectedTime.split(":").map(Number);
+        const startDate = new Date(year, month - 1, day, hour, minute, 0);
+        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+        const toCalendarDate = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+        const escapeCalendarText = (value: string) => value.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+        const calendarText = [
+          "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//HAYAN//Property Viewing//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
+          `UID:${params.propertyId}-${selectedDate}-${selectedTime}@hayan-real-state`,
+          `DTSTAMP:${toCalendarDate(new Date())}`,
+          `DTSTART:${toCalendarDate(startDate)}`,
+          `DTEND:${toCalendarDate(endDate)}`,
+          `SUMMARY:${escapeCalendarText(`${t("scheduleViewing")}: ${params.title}`)}`,
+          `LOCATION:${escapeCalendarText(params.title)}`,
+          `DESCRIPTION:${escapeCalendarText(`HAYÁN Real Estate property viewing (${params.propertyId})`)}`,
+          "END:VEVENT", "END:VCALENDAR", "",
+        ].join("\r\n");
+        const objectUrl = URL.createObjectURL(new Blob([calendarText], { type: "text/calendar;charset=utf-8" }));
+        const downloadLink = document.createElement("a");
+        downloadLink.href = objectUrl;
+        downloadLink.download = `hayan-viewing-${selectedDate}.ics`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        Alert.alert(t("calendarEventAddedTitle"), t("calendarEventAddedBody"));
+        return;
+      }
+
       const permission = await Calendar.requestCalendarPermissions(Platform.OS === "ios");
       if (permission.status !== "granted") {
         Alert.alert(t("calendarPermissionTitle"), t("calendarPermissionBody"));

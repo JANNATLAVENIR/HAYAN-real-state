@@ -34,7 +34,10 @@ export default function VerifyMfaScreen() {
     setSubmitting(true); setError("");
     const result = await verifyMfa(factorId, challengeId, code);
     setSubmitting(false);
-    if (!result.success) { setError(result.error ?? t("mfaVerifyFailed")); return; }
+    if (!result.success) {
+      setError(result.needsAdminApproval ? t("accountPendingApproval") : result.accountRejected ? t("accountRequestRejected") : result.error ?? t("mfaVerifyFailed"));
+      return;
+    }
     router.replace("/(tabs)");
   };
 

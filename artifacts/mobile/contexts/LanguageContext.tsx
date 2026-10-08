@@ -79,7 +79,7 @@ const translations = {
     passwordsMismatch: "New passwords do not match", failedChangePassword: "Failed to change password",
     luxuryRealEstate: "REAL ESTATE", noAccount: "Don't have an account?", requiredFields: "Please fill in all required fields",
     passwordAtLeast8: "Password must be at least 8 characters", registrationFailed: "Registration failed",
-    confirmationEmail: "Check your email for a confirmation link, then sign in.", enterEmail: "Please enter your email address",
+    confirmationEmail: "Check your email for a confirmation link, then sign in.", accountPendingApproval: "Your account is waiting for administrator approval. You can sign in after it is approved.", accountRequestRejected: "Your account request was declined. Contact HAYÁN support if you think this is a mistake.", approveAccount: "Approve", rejectAccount: "Reject", enterEmail: "Please enter your email address",
     unableResetLink: "Unable to send reset link", resetSentPrefix: "We've sent a password reset link to",
     resetSentSuffix: "Please check your inbox and follow the instructions.", forgotInstructions: "Enter your email address and we'll send you a link to reset your password.",
     forgotPasswordTitle: "Forgot Password", enterPassword: "Enter your password", loginFailed: "Login failed",
@@ -204,7 +204,7 @@ const translations = {
     passwordsMismatch: "Erayada sirta ahi isma laha", failedChangePassword: "Erayga sirta ah lama beddeli karin",
     luxuryRealEstate: "HANTI-MA-GUURTO", noAccount: "Akoon ma lihid?", requiredFields: "Buuxi dhammaan meelaha loo baahan yahay",
     passwordAtLeast8: "Erayga sirta ahi waa inuu ka koobnaadaa ugu yaraan 8 xaraf", registrationFailed: "Diiwaangelintu way fashilantay",
-    confirmationEmail: "Hubi iimaylkaaga, raac xiriirka xaqiijinta, kadibna gal.", enterEmail: "Geli iimaylkaaga",
+    confirmationEmail: "Hubi iimaylkaaga, raac xiriirka xaqiijinta, kadibna gal.", accountPendingApproval: "Akoonkaagu wuxuu sugayaa oggolaanshaha maamulka. Waad geli kartaa marka la aqbalo.", accountRequestRejected: "Codsiga akoonkaaga waa la diiday. La xiriir taageerada HAYÁN haddii aad u malaynayso inuu khalad yahay.", approveAccount: "Aqbal", rejectAccount: "Diid", enterEmail: "Geli iimaylkaaga",
     unableResetLink: "Xiriirka dib-u-dejinta lama diri karin", resetSentPrefix: "Xiriirka dib-u-dejinta erayga sirta ah waxaa loo diray",
     resetSentSuffix: "Hubi sanduuqa iimaylkaaga oo raac tilmaamaha.", forgotPasswordTitle: "Ma illowday erayga sirta ah?",
     enterPassword: "Geli erayga sirta ah", loginFailed: "Galitaanku wuu fashilmay",
@@ -278,7 +278,7 @@ export function translateAmenity(value: string, t: (key: TranslationKey) => stri
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("so");
+  const [language, setLanguageState] = useState<Language>("en");
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

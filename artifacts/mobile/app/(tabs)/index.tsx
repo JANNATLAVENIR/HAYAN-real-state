@@ -14,6 +14,7 @@ import { useListings } from "@/contexts/ListingsContext";
 import { useColors } from "@/hooks/useColors";
 import { supabase } from "@/lib/supabase";
 import { recommendProperties } from "@/lib/recommendations";
+import { useBranding } from "@/contexts/BrandingContext";
 
 export default function DiscoveryScreen() {
   const colors = useColors();
@@ -21,6 +22,7 @@ export default function DiscoveryScreen() {
   const insets = useSafeAreaInsets();
   const { user, toggleBookmark } = useAuth();
   const { t } = useLanguage();
+  const { settings } = useBranding();
   const { filteredProperties, filters, setFilters, isLoading, loadError, refreshListings } = useListings();
   const [showFilter, setShowFilter] = useState(false);
   const [searchQuery, setSearchQuery] = useState(filters.query ?? "");
@@ -61,10 +63,10 @@ export default function DiscoveryScreen() {
       <View style={[styles.header, { paddingTop: insets.top + webTopPad + 8 }]}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-              {user ? `${t("welcome")}, ${user.name.split(" ")[0]}` : t("welcome")}
-            </Text>
-            <Text style={[styles.brandName, { color: colors.primary }]}>HAYÁN</Text>
+            {settings.showLogo ? <Image source={settings.logoUrl ? { uri: settings.logoUrl } : require("@/assets/images/hayan-logo.png")} contentFit="contain" style={{ width: settings.logoWidth, height: settings.logoHeight, marginTop: 2 }} accessibilityLabel="HAYÁN Real Estate" /> : null}
+            {settings.showWelcome ? <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
+              {user ? `${settings.welcomeText}, ${user.name.split(" ")[0]}` : settings.welcomeText}
+            </Text> : null}
           </View>
           <View style={styles.headerActions}>
             <Pressable accessibilityRole="button" accessibilityLabel={t("saveSearchesAction")} onPress={() => void saveCurrentSearch()} style={[styles.filterBtn, { borderColor: colors.border, backgroundColor: colors.card }]}>
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
   headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
   headerActions: { flexDirection: "row", gap: 8 },
   greeting: { fontSize: 13, fontFamily: "Inter_400Regular", letterSpacing: 0.5 },
-  brandName: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: 8, marginTop: 2 },
+  brandLogo: { width: 84, height: 66, marginTop: 2 },
   filterBtn: {
     width: 44,
     height: 44,

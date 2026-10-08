@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -30,6 +31,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -38,13 +40,18 @@ export default function LoginScreen() {
       return;
     }
     setError("");
+    setMessage("");
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
       const result = await login(email, password);
 
-      if (!result.success) {
+      if (result.needsAdminApproval) {
+        setMessage(t("accountPendingApproval"));
+      } else if (result.accountRejected) {
+        setError(t("accountRequestRejected"));
+      } else if (!result.success) {
         setError(result.error || t("loginFailed"));
       } else if (result.needsMfa) {
         router.replace("/(auth)/verify-mfa" as never);
@@ -66,8 +73,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.brandSection}>
-          <Text style={[styles.brandName, { color: colors.primary }]}>HAYÁN</Text>
-          <Text style={[styles.brandTagline, { color: colors.mutedForeground }]}>{t("luxuryRealEstate")}</Text>
+          <Image source={require("@/assets/images/hayan-logo.png")} contentFit="contain" style={styles.brandLogo} accessibilityLabel="HAYÁN Real Estate" />
         </View>
 
         <View style={styles.formSection}>
@@ -80,6 +86,7 @@ export default function LoginScreen() {
               <Text style={[styles.errorText, { color: colors.destructive }]}>{error}</Text>
             </View>
           ) : null}
+          {message ? <Text accessibilityRole="alert" style={[styles.infoText, { color: colors.primary }]}>{message}</Text> : null}
 
           <View style={styles.fieldGroup}>
             <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{t("email")}</Text>
@@ -152,13 +159,13 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: 28 },
   brandSection: { alignItems: "center", marginBottom: 48 },
-  brandName: { fontSize: 40, fontFamily: "Inter_700Bold", letterSpacing: 12 },
-  brandTagline: { fontSize: 11, fontFamily: "Inter_500Medium", letterSpacing: 4, marginTop: 8 },
+  brandLogo: { width: 168, height: 133 },
   formSection: { flex: 1 },
   welcomeText: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   subtitleText: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 6, marginBottom: 28 },
   errorBox: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, marginBottom: 16 },
   errorText: { fontSize: 13, fontFamily: "Inter_500Medium", flex: 1 },
+  infoText: { fontSize: 13, fontFamily: "Inter_500Medium", marginBottom: 16 },
   fieldGroup: { marginBottom: 20 },
   fieldLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 1.5, marginBottom: 8 },
   inputWrapper: { flexDirection: "row", alignItems: "center", borderWidth: 1, paddingHorizontal: 14, paddingVertical: 14, gap: 10 },

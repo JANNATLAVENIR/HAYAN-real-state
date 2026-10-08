@@ -16,12 +16,14 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { WebAppShell } from "@/components/WebAppShell";
 import { BiometricGate } from "@/components/BiometricGate";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ListingsProvider } from "@/contexts/ListingsContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { AlertsProvider } from "@/contexts/AlertsContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { BrandingProvider } from "@/contexts/BrandingContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,6 +50,7 @@ function RootLayoutNav() {
   }, [router]);
 
   return (
+    <WebAppShell>
     <BiometricGate>
     <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
       <Stack.Screen name="index" />
@@ -69,6 +72,7 @@ function RootLayoutNav() {
       <Stack.Screen name="mortgage-calculator" options={{ animation: "slide_from_right" }} />
     </Stack>
     </BiometricGate>
+    </WebAppShell>
   );
 }
 
@@ -96,6 +100,7 @@ export default function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1 }}>
               <KeyboardProvider>
                 <AuthProvider>
+                  <BrandingProvider>
                   <ListingsProvider>
                     <ChatProvider>
                       <AlertsProvider>
@@ -103,6 +108,7 @@ export default function RootLayout() {
                       </AlertsProvider>
                     </ChatProvider>
                   </ListingsProvider>
+                  </BrandingProvider>
                 </AuthProvider>
               </KeyboardProvider>
             </GestureHandlerRootView>

@@ -60,6 +60,7 @@ export default function RegisterScreen() {
       const result = await register({ email, password, name, phone, role });
       if (!result.success) setError(result.error || t("registrationFailed"));
       else if (result.needsEmailConfirmation) setMessage(t("confirmationEmail"));
+      else if (result.needsAdminApproval) setMessage(t("accountPendingApproval"));
       else router.replace("/");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : `${t("registrationFailed")}. ${t("tryAgain")}`);

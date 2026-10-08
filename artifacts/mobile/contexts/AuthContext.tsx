@@ -12,10 +12,10 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   biometricEnabled: boolean;
   setBiometricEnabled: (enabled: boolean) => Promise<void>;
-  login: (email: string, password: string) => Promise<{ success: boolean; needsMfa?: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; needsMfa?: boolean; needsAdminApproval?: boolean; accountRejected?: boolean; error?: string }>;
   startMfaChallenge: () => Promise<{ factorId: string; challengeId: string }>;
-  verifyMfa: (factorId: string, challengeId: string, code: string) => Promise<{ success: boolean; error?: string }>;
-  register: (data: { email: string; password: string; name: string; phone: string; role: User["role"] }) => Promise<{ success: boolean; needsEmailConfirmation?: boolean; error?: string }>;
+  verifyMfa: (factorId: string, challengeId: string, code: string) => Promise<{ success: boolean; needsAdminApproval?: boolean; accountRejected?: boolean; error?: string }>;
+  register: (data: { email: string; password: string; name: string; phone: string; role: User["role"] }) => Promise<{ success: boolean; needsEmailConfirmation?: boolean; needsAdminApproval?: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
@@ -51,6 +51,7 @@ async function loadSupabaseUser(id: string, email: string, metadata: Record<stri
     bookmarks: (bookmarkRows ?? []).map((bookmark) => bookmark.property_id),
     isAdmin: Boolean(adminRow?.is_active),
     isSuspended: Boolean(profile?.is_suspended),
+    approvalStatus: profile?.approval_status ?? "pending",
   };
 }
 
@@ -86,6 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const user = await loadSupabaseUser(authUser.id, authUser.email ?? "", authUser.user_metadata ?? {});
     const localBiometric = await SecureStore.getItemAsync(biometricKey(authUser.id)).catch(() => null);
     setBiometricEnabledState(localBiometric === "enabled");
+    if (user.approvalStatus !== "approved") {
+      setBiometricEnabledState(false);
+      setState({ user: null, isLoading: false, isAuthenticated: false });
+      void supabase.auth.signOut().catch(() => undefined);
+      return user;
+    }
     if (user.isSuspended) {
       setBiometricEnabledState(false);
       setState({ user: null, isLoading: false, isAuthenticated: false });
@@ -127,6 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (assuranceError) return { success: false, error: assuranceError.message };
       if (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2") return { success: true, needsMfa: true };
       const user = await refreshSessionUser();
+      if (user?.approvalStatus === "pending") return { success: false, needsAdminApproval: true };
+      if (user?.approvalStatus === "rejected") return { success: false, accountRejected: true };
       if (!user) return { success: false, error: "This account has been suspended. Contact HAYÁN support." };
       return { success: true };
     } catch (error) { return { success: false, error: friendlyError(error) }; }
@@ -148,6 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code: code.trim() });
     if (error) return { success: false, error: error.message };
     const user = await refreshSessionUser();
+    if (user?.approvalStatus === "pending") return { success: false, needsAdminApproval: true };
+    if (user?.approvalStatus === "rejected") return { success: false, accountRejected: true };
     return user ? { success: true } : { success: false, error: "Second-factor verification could not complete sign-in." };
   }, [refreshSessionUser]);
 
@@ -160,8 +171,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) return { success: false, error: error.message };
       if (!result.session) return { success: true, needsEmailConfirmation: true };
-      await refreshSessionUser();
-      return { success: true };
+      const user = await refreshSessionUser();
+      if (user?.approvalStatus === "pending") return { success: true, needsAdminApproval: true };
+      if (user?.approvalStatus === "rejected") return { success: false, error: "This account request was declined." };
+      return user ? { success: true } : { success: false, error: "Your account could not be loaded. Please try signing in." };
     } catch (error) { return { success: false, error: friendlyError(error) }; }
   }, [refreshSessionUser]);
 

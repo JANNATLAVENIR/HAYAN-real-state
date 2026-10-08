@@ -20,6 +20,10 @@
     },
     "android": {
       "package": "com.dalka.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon-adaptive-foreground.png",
+        "backgroundColor": "#FFFFFF"
+      },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -33,7 +37,15 @@
       ]
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "output": "static",
+      "favicon": "./assets/images/icon.png",
+      "name": "HAYÁN Real Estate",
+      "shortName": "HAYÁN",
+      "description": "Discover and manage exceptional properties with HAYÁN.",
+      "themeColor": "#FFFFFF",
+      "backgroundColor": "#FFFFFF",
+      "display": "standalone",
+      "startUrl": "/"
     },
     "plugins": [
       "expo-router",
@@ -71,7 +83,7 @@
         {
           "image": "./assets/images/icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#FAF8F5"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       "expo-web-browser"

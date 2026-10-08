@@ -12,6 +12,7 @@ export interface User {
   bookmarks: string[];
   isAdmin?: boolean;
   isSuspended?: boolean;
+  approvalStatus?: "pending" | "approved" | "rejected";
 }
 
 export interface Property {
