@@ -1,11 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 export type BrandingSettings = {
   logoUrl: string;
+  appIconUrl: string;
   logoWidth: number;
   logoHeight: number;
   headerPadding: number;
@@ -26,6 +28,7 @@ export type BrandingSettings = {
 
 export const DEFAULT_BRANDING: BrandingSettings = {
   logoUrl: "",
+  appIconUrl: "",
   logoWidth: 84,
   logoHeight: 66,
   headerPadding: 20,
@@ -51,6 +54,7 @@ function normalize(value: unknown): BrandingSettings {
     typeof v === "number" && Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : fallback;
   return {
     logoUrl: typeof input.logoUrl === "string" ? input.logoUrl.slice(0, 1000) : "",
+    appIconUrl: typeof input.appIconUrl === "string" ? input.appIconUrl.slice(0, 1000) : "",
     logoWidth: number(input.logoWidth, 84, 40, 240),
     logoHeight: number(input.logoHeight, 66, 32, 180),
     headerPadding: number(input.headerPadding, 20, 8, 40),
@@ -87,6 +91,48 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    let active = true;
+    const iconUrl = settings.appIconUrl || "/hayan-home-icon-v2-512.png";
+    const ensureLink = (rel: string, sizes?: string) => {
+      let link = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ""}`);
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = rel;
+        if (sizes) link.sizes = sizes;
+        document.head.appendChild(link);
+      }
+      link.href = iconUrl;
+    };
+    ensureLink("apple-touch-icon", "180x180");
+    ensureLink("icon", "192x192");
+
+    let manifestUrl: string | null = null;
+    void fetch("/manifest.webmanifest").then((response) => response.json()).then((manifest) => {
+      if (!active) return;
+      manifest.icons = settings.appIconUrl
+        ? [
+            { src: settings.appIconUrl, sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: settings.appIconUrl, sizes: "512x512", type: "image/png", purpose: "any" },
+            { src: settings.appIconUrl, sizes: "512x512", type: "image/png", purpose: "maskable" },
+          ]
+        : [
+            { src: "/hayan-home-icon-v2-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+            { src: "/hayan-home-icon-v2-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+            { src: "/hayan-home-icon-v2-maskable.png", sizes: "1024x1024", type: "image/png", purpose: "maskable" },
+          ];
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+      manifestUrl = URL.createObjectURL(blob);
+      const link = document.head.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+      if (link) link.href = manifestUrl;
+    }).catch(() => undefined);
+    return () => {
+      active = false;
+      if (manifestUrl) URL.revokeObjectURL(manifestUrl);
+    };
+  }, [settings.appIconUrl]);
 
   useEffect(() => {
     let active = true;

@@ -10,12 +10,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { uploadPropertyImage } from "@/lib/supabase";
 import { BrandLockup } from "@/components/BrandLockup";
 
+async function squareIconUri(uri: string) {
+  if (Platform.OS !== "web" || typeof window === "undefined") return uri;
+  const image = new window.Image();
+  image.src = uri;
+  await image.decode();
+  const side = Math.min(image.naturalWidth, image.naturalHeight);
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Unable to prepare the app icon image.");
+  context.drawImage(image, (image.naturalWidth - side) / 2, (image.naturalHeight - side) / 2, side, side, 0, 0, 512, 512);
+  return canvas.toDataURL("image/png");
+}
+
 export function AdminBrandStudio() {
   const colors = useColors();
   const { t } = useLanguage();
   const { user } = useAuth();
   const { settings, isLoading, isSaving, syncError, updateDraft, save } = useBranding();
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const [uploadingAppIcon, setUploadingAppIcon] = React.useState(false);
   const [saveNotice, setSaveNotice] = React.useState("");
   const [saveFailed, setSaveFailed] = React.useState(false);
 
@@ -47,6 +63,19 @@ export function AdminBrandStudio() {
     } catch (error) {
       Alert.alert("Logo upload failed", error instanceof Error ? error.message : "Choose another image and try again.");
     } finally { setUploadingLogo(false); }
+  };
+  const uploadAppIcon = async () => {
+    if (!user) return;
+    const selection = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.95 });
+    if (selection.canceled || !selection.assets[0]) return;
+    setUploadingAppIcon(true);
+    try {
+      const iconUri = await squareIconUri(selection.assets[0].uri);
+      const appIconUrl = await uploadPropertyImage(iconUri, user.id);
+      updateDraft({ ...settings, appIconUrl });
+    } catch (error) {
+      Alert.alert("App icon upload failed", error instanceof Error ? error.message : "Choose a square PNG, JPEG, or WebP image and try again.");
+    } finally { setUploadingAppIcon(false); }
   };
 
   const numberControl = (label: string, key: keyof BrandingSettings, unit = "px") => (
@@ -112,6 +141,13 @@ export function AdminBrandStudio() {
 
       <View style={[styles.controlsCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
         <Text style={[styles.groupTitle, { color: colors.foreground }]}>LOGO & HEADER</Text>
+        <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>HOME SCREEN APP ICON</Text>
+        <Pressable disabled={uploadingAppIcon} onPress={() => void uploadAppIcon()} style={[styles.uploadButton, { borderColor: colors.border }]}>
+          {uploadingAppIcon ? <ActivityIndicator color={colors.primary} /> : <Feather name="smartphone" size={15} color={colors.primary} />}
+          <Text style={[styles.uploadText, { color: colors.foreground }]}>{uploadingAppIcon ? "UPLOADING APP ICON..." : "UPLOAD APP ICON"}</Text>
+        </Pressable>
+        {settings.appIconUrl ? <Pressable onPress={() => updateDraft({ ...settings, appIconUrl: "" })} style={styles.resetButton}><Text style={[styles.resetText, { color: colors.mutedForeground }]}>Use the default Hayan H icon</Text></Pressable> : null}
+        <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Choose a square image. Save, then remove the old home-screen shortcut and add the app again to refresh its icon.</Text>
         <Pressable disabled={uploadingLogo} onPress={() => void uploadLogo()} style={[styles.uploadButton, { borderColor: colors.border }]}>
           {uploadingLogo ? <ActivityIndicator color={colors.primary} /> : <Feather name="upload" size={15} color={colors.primary} />}
           <Text style={[styles.uploadText, { color: colors.foreground }]}>{uploadingLogo ? "UPLOADING SYMBOL..." : "UPLOAD A SYMBOL IMAGE"}</Text>
