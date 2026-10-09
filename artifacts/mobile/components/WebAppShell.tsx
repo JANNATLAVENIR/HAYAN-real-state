@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { usePathname, useRouter } from "expo-router";
+import { usePathname, useRouter, useSegments } from "expo-router";
 import React from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
@@ -18,8 +18,10 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   const { settings } = useBranding();
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const segments = useSegments();
   const router = useRouter();
   const desktop = Platform.OS === "web" && width >= 1000;
+  const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
@@ -69,7 +71,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {desktop ? (
+      {desktop && !isAuthRoute ? (
         <View style={[styles.sidebar, { backgroundColor: colors.card, borderRightColor: colors.border }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="HAYÁN Real Estate" onPress={() => router.push("/(tabs)" as never)} style={[styles.brand, { paddingHorizontal: settings.headerPadding }]}>
             <BrandLockup settings={settings} foreground={colors.foreground} muted={colors.mutedForeground} />
@@ -100,7 +102,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         </View>
       ) : null}
       <View style={styles.main}>{children}</View>
-      {!desktop && settings.showFooter && mobileNav}
+      {!desktop && !isAuthRoute && settings.showFooter && mobileNav}
     </View>
   );
 }
