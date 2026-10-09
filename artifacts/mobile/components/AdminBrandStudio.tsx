@@ -59,7 +59,12 @@ export function AdminBrandStudio() {
     setUploadingLogo(true);
     try {
       const logoUrl = await uploadPropertyImage(selection.assets[0].uri, user.id);
-      updateDraft({ ...settings, logoUrl });
+      const nextSettings = { ...settings, logoUrl };
+      updateDraft(nextSettings);
+      const result = await save(nextSettings);
+      setSaveFailed(Boolean(result.error));
+      setSaveNotice(result.error ?? "Logo uploaded and saved for everyone.");
+      if (result.error) Alert.alert("Logo was not saved", result.error);
     } catch (error) {
       Alert.alert("Logo upload failed", error instanceof Error ? error.message : "Choose another image and try again.");
     } finally { setUploadingLogo(false); }
@@ -72,7 +77,12 @@ export function AdminBrandStudio() {
     try {
       const iconUri = await squareIconUri(selection.assets[0].uri);
       const appIconUrl = await uploadPropertyImage(iconUri, user.id);
-      updateDraft({ ...settings, appIconUrl });
+      const nextSettings = { ...settings, appIconUrl };
+      updateDraft(nextSettings);
+      const result = await save(nextSettings);
+      setSaveFailed(Boolean(result.error));
+      setSaveNotice(result.error ?? "App icon uploaded and saved for everyone.");
+      if (result.error) Alert.alert("App icon was not saved", result.error);
     } catch (error) {
       Alert.alert("App icon upload failed", error instanceof Error ? error.message : "Choose a square PNG, JPEG, or WebP image and try again.");
     } finally { setUploadingAppIcon(false); }

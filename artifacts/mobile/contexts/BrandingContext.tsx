@@ -80,7 +80,7 @@ type BrandingContextValue = {
   isSaving: boolean;
   syncError: string | null;
   updateDraft: (settings: BrandingSettings) => void;
-  save: () => Promise<{ error?: string }>;
+  save: (draft?: BrandingSettings) => Promise<{ error?: string }>;
 };
 
 const BrandingContext = createContext<BrandingContextValue | null>(null);
@@ -174,15 +174,35 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id, user?.isAdmin]);
 
   const updateDraft = useCallback((draft: BrandingSettings) => setSettings(normalize(draft)), []);
-  const save = useCallback(async () => {
+  const save = useCallback(async (draft = settings) => {
     if (!user?.isAdmin) return { error: "Only an administrator can save app branding." };
-    await AsyncStorage.setItem("@hayan_branding_settings", JSON.stringify(settings)).catch(() => undefined);
-    if (!supabase) return { error: "Saved on this device. Supabase is not configured for shared app settings." };
+    if (!supabase) {
+      const message = "Supabase is not configured for shared app settings.";
+      setSyncError(message);
+      return { error: `App design was not saved: ${message}` };
+    }
     setIsSaving(true);
-    const { error } = await supabase.from("site_settings").upsert({ id: "branding", value: settings, updated_by: user.id }, { onConflict: "id" });
-    setIsSaving(false);
-    setSyncError(error ? `Shared sync failed: ${error.message}` : null);
-    return error ? { error: `Saved on this device only. Shared Supabase update failed: ${error.message}` } : {};
+    try {
+      const nextSettings = normalize(draft);
+      const { error } = await supabase.from("site_settings").upsert(
+        { id: "branding", value: nextSettings, updated_by: user.id },
+        { onConflict: "id" },
+      );
+      if (error) {
+        setSyncError(`Shared sync failed: ${error.message}`);
+        return { error: `App design was not saved: ${error.message}` };
+      }
+      await AsyncStorage.setItem("@hayan_branding_settings", JSON.stringify(nextSettings)).catch(() => undefined);
+      setSettings(nextSettings);
+      setSyncError(null);
+      return {};
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The shared settings request failed.";
+      setSyncError(`Shared sync failed: ${message}`);
+      return { error: `App design was not saved: ${message}` };
+    } finally {
+      setIsSaving(false);
+    }
   }, [settings, user?.id, user?.isAdmin]);
 
   return <BrandingContext.Provider value={{ settings, isLoading, isSaving, syncError, updateDraft, save }}>{children}</BrandingContext.Provider>;
