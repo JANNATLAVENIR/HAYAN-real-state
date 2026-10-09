@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -136,36 +135,29 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    if (!supabase) { setIsLoading(false); return; }
+    if (!supabase) {
+      setSyncError("Supabase is not configured; shared app branding is unavailable.");
+      setIsLoading(false);
+      return;
+    }
     void (async () => {
       try {
-        const [local, remote] = await Promise.all([
-          AsyncStorage.getItem("@hayan_branding_settings").catch(() => null),
-          supabase.from("site_settings").select("value").eq("id", "branding").maybeSingle(),
-        ]);
+        const remote = await supabase.from("site_settings").select("value").eq("id", "branding").maybeSingle();
         if (!active) return;
-        if (!remote.error && remote.data?.value) {
+        if (remote.error) {
+          setSyncError(`Shared settings could not be loaded: ${remote.error.message}`);
+          return;
+        }
+        if (remote.data?.value) {
           const shared = normalize(remote.data.value);
           setSettings(shared);
           setSyncError(null);
-          void AsyncStorage.setItem("@hayan_branding_settings", JSON.stringify(shared)).catch(() => undefined);
-        } else if (local) {
-          const localSettings = normalize(JSON.parse(local));
-          setSettings(localSettings);
-          // Migrate the admin's previous device-only design into shared storage
-          // the first time the new shared settings table is available.
-          if (user?.isAdmin && user.id) {
-            const { error } = await supabase.from("site_settings").upsert(
-              { id: "branding", value: localSettings, updated_by: user.id },
-              { onConflict: "id" },
-            );
-            setSyncError(error ? `Shared sync failed: ${error.message}` : null);
-          }
-        } else if (remote.error) {
-          setSyncError(`Shared settings could not be loaded: ${remote.error.message}`);
+        } else {
+          setSettings(DEFAULT_BRANDING);
+          setSyncError(null);
         }
       } catch {
-        // Keep the built-in defaults if neither storage is available.
+        if (active) setSyncError("Shared app branding could not be loaded from Supabase.");
       } finally {
         if (active) setIsLoading(false);
       }
@@ -192,7 +184,6 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         setSyncError(`Shared sync failed: ${error.message}`);
         return { error: `App design was not saved: ${error.message}` };
       }
-      await AsyncStorage.setItem("@hayan_branding_settings", JSON.stringify(nextSettings)).catch(() => undefined);
       setSettings(nextSettings);
       setSyncError(null);
       return {};

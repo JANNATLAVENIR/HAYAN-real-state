@@ -1,8 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { Property, FilterOptions, ScheduledViewing } from "@/constants/types";
-import { SEED_PROPERTIES } from "@/constants/seed";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -29,10 +27,6 @@ interface ListingsContextType {
 }
 
 const ListingsContext = createContext<ListingsContextType | null>(null);
-
-const STORAGE_KEY = "@dalka_properties";
-const VIEWINGS_KEY = "@dalka_viewings";
-const AREA_UNIT_VERSION_KEY = "@dalka_area_unit_v1";
 
 function mapProperty(row: Record<string, any>): Property {
   return {
@@ -93,51 +87,26 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
   const loadData = async () => {
     setLoadError(null);
     try {
-      if (isSupabaseConfigured && supabase) {
-        const [propertiesResult, viewingsResult] = await Promise.all([
-          supabase.from("properties").select("*").order("created_at", { ascending: false }),
-          supabase.from("viewings").select("*, properties(title)").order("created_at", { ascending: false }),
-        ]);
-        if (propertiesResult.error) throw new Error(propertiesResult.error.message);
-        if (viewingsResult.error) throw new Error(viewingsResult.error.message);
-        setProperties((propertiesResult.data ?? []).map(mapProperty));
-        const viewingRows = viewingsResult.data ?? [];
-        const requesterIds = [...new Set(viewingRows.map((row: any) => row.user_id))];
-        const { data: requesterProfiles, error: requesterError } = requesterIds.length
-          ? await supabase.from("public_profiles").select("id,name").in("id", requesterIds)
-          : { data: [], error: null };
-        if (requesterError) throw new Error(requesterError.message);
-        const requesterNames = Object.fromEntries((requesterProfiles ?? []).map((profile: any) => [profile.id, profile.name]));
-        setViewings(viewingRows.map((row: any) => mapViewing({
-          ...row,
-          property_title: row.properties?.title,
-          requester_name: requesterNames[row.user_id],
-        }, t("propertyViewing"))));
-        return;
-      }
-
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const storedProperties: Property[] = JSON.parse(stored);
-        const unitVersion = await AsyncStorage.getItem(AREA_UNIT_VERSION_KEY);
-        if (unitVersion !== "sqm") {
-          const migrated = storedProperties.map((property) => ({
-            ...property,
-            area: Number((property.area / 10.7639).toFixed(2)),
-          }));
-          setProperties(migrated);
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-          await AsyncStorage.setItem(AREA_UNIT_VERSION_KEY, "sqm");
-        } else {
-          setProperties(storedProperties);
-        }
-      } else {
-        setProperties(SEED_PROPERTIES);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_PROPERTIES));
-        await AsyncStorage.setItem(AREA_UNIT_VERSION_KEY, "sqm");
-      }
-      const viewingsStored = await AsyncStorage.getItem(VIEWINGS_KEY);
-      if (viewingsStored) setViewings(JSON.parse(viewingsStored));
+      if (!supabase) throw new Error("Supabase is not configured. Property and viewing data are unavailable.");
+      const [propertiesResult, viewingsResult] = await Promise.all([
+        supabase.from("properties").select("*").order("created_at", { ascending: false }),
+        supabase.from("viewings").select("*, properties(title)").order("created_at", { ascending: false }),
+      ]);
+      if (propertiesResult.error) throw new Error(propertiesResult.error.message);
+      if (viewingsResult.error) throw new Error(viewingsResult.error.message);
+      setProperties((propertiesResult.data ?? []).map(mapProperty));
+      const viewingRows = viewingsResult.data ?? [];
+      const requesterIds = [...new Set(viewingRows.map((row: any) => row.user_id))];
+      const { data: requesterProfiles, error: requesterError } = requesterIds.length
+        ? await supabase.from("public_profiles").select("id,name").in("id", requesterIds)
+        : { data: [], error: null };
+      if (requesterError) throw new Error(requesterError.message);
+      const requesterNames = Object.fromEntries((requesterProfiles ?? []).map((profile: any) => [profile.id, profile.name]));
+      setViewings(viewingRows.map((row: any) => mapViewing({
+        ...row,
+        property_title: row.properties?.title,
+        requester_name: requesterNames[row.user_id],
+      }, t("propertyViewing"))));
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : t("refreshError"));
     } finally {
@@ -148,11 +117,6 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
   const refreshListings = async () => {
     setIsLoading(true);
     await loadData();
-  };
-
-  const saveProperties = async (props: Property[]) => {
-    setProperties(props);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(props));
   };
 
   const filteredProperties = properties.filter((p) => {
@@ -178,8 +142,8 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
   const clearFilters = useCallback(() => setFilters({}), []);
 
   const addProperty = useCallback(async (p: Omit<Property, "id" | "views" | "createdAt">) => {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from("properties").insert({
+    if (!supabase) throw new Error("Supabase is not configured. Property data cannot be saved.");
+    const { data, error } = await supabase.from("properties").insert({
         owner_id: p.ownerId,
         title: p.title,
         description: p.description,
@@ -202,26 +166,12 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
       if (error || !data) throw new Error(error?.message ?? "Unable to create property");
       const newProperty = { ...p, id: data.id, views: 0, createdAt: new Date().toISOString(), status: "pending" as const, availabilityStatus: p.availabilityStatus ?? "available" };
       setProperties((current) => [newProperty, ...current]);
-      return data.id;
-    }
-
-    const id = "prop-" + Date.now().toString(36);
-    const newProp: Property = {
-      ...p,
-      id,
-      views: 0,
-      createdAt: new Date().toISOString(),
-      status: "pending",
-      availabilityStatus: p.availabilityStatus ?? "available",
-    };
-    const updated = [newProp, ...properties];
-    await saveProperties(updated);
-    return id;
-  }, [properties]);
+    return data.id;
+  }, []);
 
   const updateProperty = useCallback(async (id: string, updates: Partial<Property>) => {
-    if (isSupabaseConfigured && supabase) {
-      const payload = {
+    if (!supabase) throw new Error("Supabase is not configured. Property data cannot be updated.");
+    const payload = {
         ...(updates.title !== undefined && { title: updates.title }),
         ...(updates.description !== undefined && { description: updates.description }),
         ...(updates.price !== undefined && { price: updates.price }),
@@ -252,45 +202,27 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
         status: data.status ?? (requiresReview ? "pending" : p.status),
         availabilityStatus: data.availability_status ?? updates.availabilityStatus ?? p.availabilityStatus ?? "available",
       } : p)));
-      return;
-    }
-
-    const currentProperty = properties.find((property) => property.id === id);
-    const requiresReview = Boolean(currentProperty && [
-      "title", "description", "price", "type", "listingType", "bedrooms", "bathrooms", "area",
-      "address", "city", "images", "amenities", "petFriendly", "latitude", "longitude",
-    ].some((key) => updates[key as keyof Property] !== undefined && updates[key as keyof Property] !== currentProperty[key as keyof Property]));
-    const updated = properties.map((p) => (p.id === id ? { ...p, ...updates, ...(requiresReview ? { status: "pending" as const } : {}) } : p));
-    await saveProperties(updated);
   }, [properties]);
 
   const deleteProperty = useCallback(async (id: string) => {
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("properties").delete().eq("id", id);
-      if (error) throw new Error(error.message);
-      setProperties((current) => current.filter((p) => p.id !== id));
-      return;
-    }
-
-    const updated = properties.filter((p) => p.id !== id);
-    await saveProperties(updated);
-  }, [properties]);
+    if (!supabase) throw new Error("Supabase is not configured. Property data cannot be deleted.");
+    const { error } = await supabase.from("properties").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    setProperties((current) => current.filter((p) => p.id !== id));
+  }, []);
 
   const getProperty = useCallback((id: string) => properties.find((p) => p.id === id), [properties]);
 
   const incrementViews = useCallback(async (id: string) => {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.rpc("increment_property_views", { property_id: id });
-      if (error) throw new Error(error.message);
-      if (typeof data === "number") setProperties((current) => current.map((property) => property.id === id ? { ...property, views: data } : property));
-      return;
-    }
-    setProperties((prev) => prev.map((p) => (p.id === id ? { ...p, views: p.views + 1 } : p)));
+    if (!supabase) throw new Error("Supabase is not configured. Property views cannot be saved.");
+    const { data, error } = await supabase.rpc("increment_property_views", { property_id: id });
+    if (error) throw new Error(error.message);
+    if (typeof data === "number") setProperties((current) => current.map((property) => property.id === id ? { ...property, views: data } : property));
   }, []);
 
   const scheduleViewing = useCallback(async (v: Omit<ScheduledViewing, "id" | "status">) => {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from("viewings").insert({
+    if (!supabase) throw new Error("Supabase is not configured. Viewing requests cannot be saved.");
+    const { data, error } = await supabase.from("viewings").insert({
         property_id: v.propertyId,
         user_id: v.userId,
         agent_id: v.agentId || null,
@@ -302,32 +234,14 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
       }
       if (error || !data) throw new Error(error?.message ?? "Unable to schedule viewing");
       setViewings((current) => [...current, mapViewing({ ...data, property_title: data.properties?.title })]);
-      return;
-    }
-
-    const viewing: ScheduledViewing = {
-      ...v,
-      agentId: properties.find((property) => property.id === v.propertyId)?.ownerId ?? v.agentId,
-      id: "view-" + Date.now().toString(36),
-      status: "pending",
-    };
-    const updated = [...viewings, viewing];
-    setViewings(updated);
-    await AsyncStorage.setItem(VIEWINGS_KEY, JSON.stringify(updated));
-  }, [properties, viewings]);
+  }, [t]);
 
   const cancelViewing = useCallback(async (id: string) => {
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("viewings").update({ status: "cancelled" }).eq("id", id);
-      if (error) throw new Error(error.message);
-      setViewings((current) => current.map((v) => (v.id === id ? { ...v, status: "cancelled" as const } : v)));
-      return;
-    }
-
-    const updated = viewings.map((v) => (v.id === id ? { ...v, status: "cancelled" as const } : v));
-    setViewings(updated);
-    await AsyncStorage.setItem(VIEWINGS_KEY, JSON.stringify(updated));
-  }, [viewings]);
+    if (!supabase) throw new Error("Supabase is not configured. Viewing requests cannot be updated.");
+    const { error } = await supabase.from("viewings").update({ status: "cancelled" }).eq("id", id);
+    if (error) throw new Error(error.message);
+    setViewings((current) => current.map((v) => (v.id === id ? { ...v, status: "cancelled" as const } : v)));
+  }, []);
 
   const rescheduleViewing = useCallback(async (id: string, date: string, time: string) => {
     const [year, month, day] = date.split("-").map(Number);
@@ -340,30 +254,19 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
     if (!validDate || !validTime || !Number.isFinite(proposedTime) || proposedTime <= Date.now()) {
       throw new Error(t("invalidViewingDate"));
     }
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("viewings").update({ date, time }).eq("id", id);
-      if (error?.code === "23505") throw new Error(t("viewingSlotTaken"));
-      if (error) throw new Error(error.message);
-      setViewings((current) => current.map((viewing) => viewing.id === id ? { ...viewing, date, time } : viewing));
-      return;
-    }
-    const updated = viewings.map((viewing) => (viewing.id === id ? { ...viewing, date, time } : viewing));
-    setViewings(updated);
-    await AsyncStorage.setItem(VIEWINGS_KEY, JSON.stringify(updated));
-  }, [t, viewings]);
+    if (!supabase) throw new Error("Supabase is not configured. Viewing requests cannot be updated.");
+    const { error } = await supabase.from("viewings").update({ date, time }).eq("id", id);
+    if (error?.code === "23505") throw new Error(t("viewingSlotTaken"));
+    if (error) throw new Error(error.message);
+    setViewings((current) => current.map((viewing) => viewing.id === id ? { ...viewing, date, time } : viewing));
+  }, [t]);
 
   const respondToViewing = useCallback(async (id: string, status: "confirmed" | "cancelled") => {
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("viewings").update({ status }).eq("id", id);
-      if (error) throw new Error(error.message);
-      setViewings((current) => current.map((viewing) => viewing.id === id ? { ...viewing, status } : viewing));
-      return;
-    }
-
-    const updated = viewings.map((viewing) => (viewing.id === id ? { ...viewing, status } : viewing));
-    setViewings(updated);
-    await AsyncStorage.setItem(VIEWINGS_KEY, JSON.stringify(updated));
-  }, [viewings]);
+    if (!supabase) throw new Error("Supabase is not configured. Viewing requests cannot be updated.");
+    const { error } = await supabase.from("viewings").update({ status }).eq("id", id);
+    if (error) throw new Error(error.message);
+    setViewings((current) => current.map((viewing) => viewing.id === id ? { ...viewing, status } : viewing));
+  }, []);
 
   const getUserProperties = useCallback((userId: string) => properties.filter((p) => p.ownerId === userId), [properties]);
 

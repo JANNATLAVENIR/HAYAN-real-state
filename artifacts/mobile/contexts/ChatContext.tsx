@@ -1,8 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { Conversation, Message } from "@/constants/types";
-import { SEED_CONVERSATIONS } from "@/constants/seed";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -22,21 +20,6 @@ interface ChatContextType {
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
-
-const CONV_KEY = "@dalka_conversations";
-const MSG_KEY = "@dalka_messages";
-
-const SEED_MESSAGES: Record<string, Message[]> = {
-  "conv-1": [
-    { id: "msg-1", conversationId: "conv-1", senderId: "agent-1", text: "Waad ku mahadsan tahay xiisaha aad u muujisay guriga Hodan.", timestamp: "2025-03-25T14:00:00Z", read: true },
-    { id: "msg-2", conversationId: "conv-1", senderId: "user-1", text: "Waan ka helay. Ma qabsan karaa waqti aan ku soo booqdo?", timestamp: "2025-03-25T14:15:00Z", read: true },
-    { id: "msg-3", conversationId: "conv-1", senderId: "agent-1", text: "Haa, waan kuu qaban karaa waqti booqasho.", timestamp: "2025-03-25T14:30:00Z", read: false },
-  ],
-  "conv-2": [
-    { id: "msg-4", conversationId: "conv-2", senderId: "user-1", text: "Waxaan gudbiyey dalabkaygii guriga Hargeysa. War ma jiraa?", timestamp: "2025-03-24T08:00:00Z", read: true },
-    { id: "msg-5", conversationId: "conv-2", senderId: "agent-1", text: "Iibiyuhu wuu aqbalay dalabkaaga. Hambalyo!", timestamp: "2025-03-24T09:15:00Z", read: true },
-  ],
-};
 
 function mapMessage(row: Record<string, any>): Message {
   return {
@@ -88,8 +71,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setLoadError(null);
     try {
-      if (isSupabaseConfigured && supabase) {
-        const [{ data: conversationRows, error: conversationsError }, { data: unreadRows, error: unreadError }] = await Promise.all([
+      if (!supabase) throw new Error("Supabase is not configured. Conversations and messages are unavailable.");
+      const [{ data: conversationRows, error: conversationsError }, { data: unreadRows, error: unreadError }] = await Promise.all([
           supabase.from("conversations")
             .select("*, conversation_members(user_id), properties(title, price, listing_type, address, city, images), messages(text, created_at)")
             .order("created_at", { ascending: false, referencedTable: "messages" })
@@ -110,23 +93,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           counts[row.conversation_id] = (counts[row.conversation_id] ?? 0) + 1;
           return counts;
         }, {});
-        setConversations((conversationRows ?? []).map((row: any) => {
-          const unreadCount = unreadCounts[row.id] ?? 0;
-          return mapConversation(row, profileNames, profileAvatars, unreadCount, t("unknownUser"));
-        }));
-      } else {
-        const convRaw = await AsyncStorage.getItem(CONV_KEY);
-        const msgRaw = await AsyncStorage.getItem(MSG_KEY);
-        if (convRaw) {
-          setConversations(JSON.parse(convRaw));
-          setMessages(msgRaw ? JSON.parse(msgRaw) : {});
-        } else {
-          setConversations(SEED_CONVERSATIONS);
-          setMessages(SEED_MESSAGES);
-          await AsyncStorage.setItem(CONV_KEY, JSON.stringify(SEED_CONVERSATIONS));
-          await AsyncStorage.setItem(MSG_KEY, JSON.stringify(SEED_MESSAGES));
-        }
-      }
+      setConversations((conversationRows ?? []).map((row: any) => {
+        const unreadCount = unreadCounts[row.id] ?? 0;
+        return mapConversation(row, profileNames, profileAvatars, unreadCount, t("unknownUser"));
+      }));
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "Unable to load conversations. Please try again.");
     } finally {
@@ -135,7 +105,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [t, user?.id]);
 
   const loadConversationMessages = useCallback(async (conversationId: string) => {
-    if (!isSupabaseConfigured || !supabase) return;
+    if (!supabase) throw new Error("Supabase is not configured. Messages are unavailable.");
     setMessages((current) => ({ ...current, [conversationId]: [] }));
     const { data, error } = await supabase.from("messages").select("*")
       .eq("conversation_id", conversationId)
@@ -180,8 +150,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id]);
 
   const sendMessage = useCallback(async (conversationId: string, senderId: string, text: string) => {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.from("messages").insert({
+    if (!supabase) throw new Error("Supabase is not configured. Messages cannot be sent.");
+    const { data, error } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: senderId,
         text: text.trim(),
@@ -199,39 +169,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     }
           : conversation,
       ));
-      return;
-    }
-
-    const msg: Message = {
-      id: "msg-" + Date.now().toString(36),
-      conversationId,
-      senderId,
-      text,
-      timestamp: new Date().toISOString(),
-      read: true,
-    };
-
-    const updatedMessages = { ...messages };
-    if (!updatedMessages[conversationId]) updatedMessages[conversationId] = [];
-    updatedMessages[conversationId] = [...updatedMessages[conversationId], msg];
-    setMessages(updatedMessages);
-
-    const updatedConvs = conversations.map((c) =>
-      c.id === conversationId ? { ...c, lastMessage: text, lastMessageTime: msg.timestamp } : c
-    );
-    setConversations(updatedConvs);
-
-    await AsyncStorage.setItem(MSG_KEY, JSON.stringify(updatedMessages));
-    await AsyncStorage.setItem(CONV_KEY, JSON.stringify(updatedConvs));
-
-  }, [messages, conversations]);
+  }, [user?.id]);
 
   const getConversation = useCallback((id: string) => conversations.find((c) => c.id === id), [conversations]);
 
   const createConversation = useCallback(async (conv: Omit<Conversation, "id" | "lastMessage" | "lastMessageTime" | "unreadCount">) => {
     const participantIds = [...new Set(conv.participants)];
     if (participantIds.length !== 2) throw new Error("A direct conversation requires exactly two participants");
-    if (isSupabaseConfigured && supabase) {
+    if (supabase) {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData.user) throw new Error(authError?.message ?? "Sign in to start a conversation");
       if (!participantIds.includes(authData.user.id)) throw new Error("A direct conversation requires you and one other participant");
@@ -247,26 +192,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       await loadData();
       return conversationId;
     }
-
-    if (!user?.id || !participantIds.includes(user.id)) throw new Error("A direct conversation requires you and one other participant");
-    const existing = conversations.find((conversation) =>
-      conversation.participants.length === 2
-      && participantIds.every((participantId) => conversation.participants.includes(participantId))
-      && (conversation.propertyId ?? undefined) === (conv.propertyId ?? undefined),
-    );
-    if (existing) return existing.id;
-
-    const id = "conv-" + Date.now().toString(36);
-    const newConv: Conversation = { ...conv, id, lastMessage: undefined, lastMessageTime: undefined, unreadCount: 0 };
-    const updated = [newConv, ...conversations];
-    setConversations(updated);
-    await AsyncStorage.setItem(CONV_KEY, JSON.stringify(updated));
-    return id;
-  }, [conversations, loadData, user?.id]);
+    throw new Error("Supabase is not configured. Conversations cannot be created.");
+  }, [loadData, user?.id]);
 
   const markAsRead = useCallback(async (conversationId: string) => {
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from("messages").update({ read_at: new Date().toISOString() })
+    if (!supabase) throw new Error("Supabase is not configured. Message read status cannot be saved.");
+    const { error } = await supabase.from("messages").update({ read_at: new Date().toISOString() })
         .eq("conversation_id", conversationId)
         .is("read_at", null)
         .neq("sender_id", user?.id ?? "");
@@ -278,23 +209,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           message.senderId === user?.id ? message : { ...message, read: true },
         ),
       }));
-      return;
-    }
-
-    const updatedConvs = conversations.map((c) =>
-      c.id === conversationId ? { ...c, unreadCount: 0 } : c
-    );
-    setConversations(updatedConvs);
-
-    const updatedMessages = { ...messages };
-    if (updatedMessages[conversationId]) {
-      updatedMessages[conversationId] = updatedMessages[conversationId].map((m) => ({ ...m, read: true }));
-    }
-    setMessages(updatedMessages);
-
-    await AsyncStorage.setItem(CONV_KEY, JSON.stringify(updatedConvs));
-    await AsyncStorage.setItem(MSG_KEY, JSON.stringify(updatedMessages));
-  }, [conversations, messages, user?.id]);
+  }, [user?.id]);
 
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
 
