@@ -14,6 +14,7 @@ export default function AuthLayout() {
         animation: "fade",
       }}
     >
+      <Stack.Screen name="get-started" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
       <Stack.Screen name="forgot-password" />
