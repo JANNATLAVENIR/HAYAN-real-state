@@ -153,7 +153,7 @@ export default function LoginScreen() {
 
         <View style={[styles.companyCredit, { borderTopColor: colors.border }]}>
           <Image
-            source={require("@/assets/images/jannat-lavenir-logo.jpg")}
+            source={require("@/assets/images/jannat-lavenir-logo.png")}
             contentFit="contain"
             style={styles.companyLogo}
             accessibilityLabel="Jannat L'Avenir logo"
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   bottomSection: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 32 },
   noAccountText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   signUpText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 26, paddingTop: 18 },
-  companyLogo: { width: 38, height: 38, borderRadius: 8 },
+  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 20, paddingTop: 14, paddingBottom: 4 },
+  companyLogo: { width: 28, height: 38 },
   companyCreditLabel: { fontSize: 10, fontFamily: "Inter_400Regular", letterSpacing: 0.5, marginBottom: 3 },
   companyName: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 1.1 },
 });
