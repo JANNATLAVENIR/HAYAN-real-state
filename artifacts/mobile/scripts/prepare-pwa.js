@@ -28,8 +28,19 @@ function findHtmlFiles(directory) {
   });
 }
 
+function setMeta(html, name, content) {
+  const pattern = new RegExp(`<meta\\s+name=["']${name}["'][^>]*>`, "i");
+  const tag = `  <meta name="${name}" content="${content}" />`;
+  return pattern.test(html)
+    ? html.replace(pattern, tag)
+    : html.replace("</head>", `${tag}\n</head>`);
+}
+
 for (const htmlPath of findHtmlFiles(outputDir)) {
   let html = fs.readFileSync(htmlPath, "utf8");
+  html = setMeta(html, "viewport", "width=device-width, initial-scale=1, viewport-fit=cover");
+  html = setMeta(html, "apple-mobile-web-app-capable", "yes");
+  html = setMeta(html, "apple-mobile-web-app-status-bar-style", "black-translucent");
   if (!html.includes('rel="manifest"')) {
     html = html.replace("</head>", '  <link rel="manifest" href="/manifest.webmanifest" />\n  <meta name="theme-color" content="#FFFFFF" />\n</head>');
   }
