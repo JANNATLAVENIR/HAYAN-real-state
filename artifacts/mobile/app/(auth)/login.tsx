@@ -13,6 +13,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -22,6 +23,8 @@ import { useColors } from "@/hooks/useColors";
 
 export default function LoginScreen() {
   const colors = useColors();
+  const { width } = useWindowDimensions();
+  const compactWeb = Platform.OS === "web" && width < 600;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { login } = useAuth();
@@ -69,14 +72,14 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 40), paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 40) }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + (compactWeb ? 14 : Platform.OS === "web" ? 67 : 40), paddingBottom: insets.bottom + (compactWeb ? 82 : Platform.OS === "web" ? 120 : 40) }]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.brandSection}>
-          <Image source={require("@/assets/images/hayan-logo.png")} contentFit="contain" style={styles.brandLogo} accessibilityLabel="HAYÁN Real Estate" />
+        <View style={[styles.brandSection, compactWeb && styles.compactBrandSection]}>
+          <Image source={require("@/assets/images/hayan-logo.png")} contentFit="contain" style={[styles.brandLogo, compactWeb && styles.compactBrandLogo]} accessibilityLabel="HAYÁN Real Estate" />
         </View>
 
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, compactWeb && styles.compactFormSection]}>
           <Text style={[styles.welcomeText, { color: colors.foreground }]}>{t("welcomeBack")}</Text>
           <Text style={[styles.subtitleText, { color: colors.mutedForeground }]}>{t("signInContinue")}</Text>
 
@@ -88,7 +91,7 @@ export default function LoginScreen() {
           ) : null}
           {message ? <Text accessibilityRole="alert" style={[styles.infoText, { color: colors.primary }]}>{message}</Text> : null}
 
-          <View style={styles.fieldGroup}>
+          <View style={[styles.fieldGroup, compactWeb && styles.compactFieldGroup]}>
             <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{t("email")}</Text>
             <View style={[styles.inputWrapper, { borderColor: colors.border, borderRadius: colors.radius }]}>
               <Feather name="mail" size={18} color={colors.mutedForeground} />
@@ -105,7 +108,7 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <View style={styles.fieldGroup}>
+          <View style={[styles.fieldGroup, compactWeb && styles.compactFieldGroup]}>
             <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{t("password")}</Text>
             <View style={[styles.inputWrapper, { borderColor: colors.border, borderRadius: colors.radius }]}>
               <Feather name="lock" size={18} color={colors.mutedForeground} />
@@ -125,11 +128,11 @@ export default function LoginScreen() {
           </View>
 
           <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-            <Text style={[styles.forgotText, { color: colors.primary }]}>{t("forgotPassword")}</Text>
+            <Text style={[styles.forgotText, compactWeb && styles.compactForgotText, { color: colors.primary }]}>{t("forgotPassword")}</Text>
           </Pressable>
 
           <Pressable
-            style={({ pressed }) => [styles.loginBtn, { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.loginBtn, compactWeb && styles.compactLoginBtn, { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.9 : 1 }]}
             onPress={handleLogin}
             disabled={loading}
           >
@@ -142,7 +145,7 @@ export default function LoginScreen() {
 
         </View>
 
-        <View style={styles.bottomSection}>
+        <View style={[styles.bottomSection, compactWeb && styles.compactBottomSection]}>
           <Text style={[styles.noAccountText, { color: colors.mutedForeground }]}>
             {t("noAccount")} {" "}
           </Text>
@@ -151,7 +154,7 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.companyCredit, { borderTopColor: colors.border }]}>
+        <View style={[styles.companyCredit, compactWeb && styles.compactCompanyCredit, { borderTopColor: colors.border }]}>
           <Image
             source={require("@/assets/images/jannat-lavenir-logo.png")}
             contentFit="contain"
@@ -172,25 +175,33 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: 28 },
   brandSection: { alignItems: "center", marginBottom: 48 },
+  compactBrandSection: { marginBottom: 14 },
   brandLogo: { width: 120, height: 95 },
+  compactBrandLogo: { width: 108, height: 85 },
   formSection: { flex: 1 },
+  compactFormSection: { flex: 0 },
   welcomeText: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   subtitleText: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 6, marginBottom: 28 },
   errorBox: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, marginBottom: 16 },
   errorText: { fontSize: 13, fontFamily: "Inter_500Medium", flex: 1 },
   infoText: { fontSize: 13, fontFamily: "Inter_500Medium", marginBottom: 16 },
   fieldGroup: { marginBottom: 20 },
+  compactFieldGroup: { marginBottom: 12 },
   fieldLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 1.5, marginBottom: 8 },
   inputWrapper: { flexDirection: "row", alignItems: "center", borderWidth: 1, paddingHorizontal: 14, paddingVertical: 14, gap: 10 },
   textInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular" },
   forgotText: { fontSize: 13, fontFamily: "Inter_500Medium", textAlign: "right", marginBottom: 24 },
+  compactForgotText: { marginBottom: 14 },
   loginBtn: { paddingVertical: 16, alignItems: "center", marginBottom: 16 },
+  compactLoginBtn: { paddingVertical: 13, marginBottom: 10 },
   loginBtnText: { fontSize: 14, fontFamily: "Inter_600SemiBold", letterSpacing: 1.5 },
   bottomSection: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 32 },
+  compactBottomSection: { marginTop: 10 },
   noAccountText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   signUpText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 20, paddingTop: 14, paddingBottom: 4 },
-  companyLogo: { width: 28, height: 38 },
+  compactCompanyCredit: { marginTop: 10, paddingTop: 8, paddingBottom: 0 },
+  companyLogo: { width: 36, height: 53 },
   companyCreditLabel: { fontSize: 10, fontFamily: "Inter_400Regular", letterSpacing: 0.5, marginBottom: 3 },
   companyName: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 1.1 },
 });
