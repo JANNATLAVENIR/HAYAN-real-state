@@ -47,9 +47,9 @@ export default function GetStartedScreen() {
         </View>
 
         <Image
-          source={require("@/assets/images/villa-property.png")}
-          contentFit="cover"
-          style={[styles.heroImage, compact && styles.compactHeroImage]}
+          source={require("@/assets/images/welcome-house-reference.png")}
+          contentFit="contain"
+          style={[styles.illustration, compact && styles.compactIllustration]}
           accessibilityLabel={t("getStartedDescription")}
         />
 
@@ -70,6 +70,19 @@ export default function GetStartedScreen() {
         >
           <Text style={[styles.loginLinkText, { color: colors.secondaryForeground }]}>{t("alreadyHaveAccount")}</Text>
         </Pressable>
+
+        <View style={[styles.companyCredit, { borderTopColor: colors.border }]}>
+          <Image
+            source={require("@/assets/images/jannat-lavenir-logo.png")}
+            contentFit="contain"
+            style={styles.companyLogo}
+            accessibilityLabel="Jannat L'Avenir logo"
+          />
+          <View>
+            <Text style={[styles.companyCreditLabel, { color: colors.mutedForeground }]}>Developed by</Text>
+            <Text style={[styles.companyName, { color: colors.foreground }]}>JANNAT L'AVENIR</Text>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -86,10 +99,14 @@ const styles = StyleSheet.create({
   headline: { fontFamily: "Georgia", fontSize: 34, lineHeight: 41, letterSpacing: -0.8 },
   compactHeadline: { fontSize: 30, lineHeight: 36 },
   description: { fontFamily: "Inter_400Regular", fontSize: 15, lineHeight: 23, marginTop: 12, maxWidth: 390 },
-  heroImage: { width: "100%", height: 258, borderRadius: 10, marginBottom: 20 },
-  compactHeroImage: { height: 218, marginBottom: 14 },
+  illustration: { width: "100%", height: 258, marginBottom: 20, alignSelf: "center" },
+  compactIllustration: { height: 218, marginBottom: 14 },
   primaryButton: { minHeight: 58, paddingHorizontal: 26, borderRadius: 32, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16 },
   primaryButtonText: { color: "#FFFFFF", fontFamily: "Georgia", fontSize: 18 },
   loginLink: { minHeight: 52, alignItems: "center", justifyContent: "center", marginTop: 10 },
   loginLinkText: { fontFamily: "Inter_500Medium", fontSize: 15 },
+  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 8, paddingTop: 10, paddingBottom: 2 },
+  companyLogo: { width: 24, height: 30 },
+  companyCreditLabel: { fontSize: 9, fontFamily: "Inter_400Regular", letterSpacing: 0.4, marginBottom: 2 },
+  companyName: { fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 1 },
 });
