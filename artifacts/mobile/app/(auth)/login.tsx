@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: 28 },
   brandSection: { alignItems: "center", marginBottom: 48 },
-  brandLogo: { width: 168, height: 133 },
+  brandLogo: { width: 120, height: 95 },
   formSection: { flex: 1 },
   welcomeText: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   subtitleText: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 6, marginBottom: 28 },
