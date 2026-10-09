@@ -54,7 +54,7 @@ HAYÁN is a premium real estate mobile app built with React Native (Expo) featur
 ## Mobile release setup
 
 - Copy `artifacts/mobile/.env.example` to `artifacts/mobile/.env` and set the Supabase project URL and anon key. Do not put a Supabase service-role key in the app.
-- Apply the SQL files to the Supabase project in dependency order: `schema.sql`, `viewings-scheduling-hardening.sql`, `admin.sql`, `admin-management.sql`, `admin-actions.sql`, `local-market-units.sql`, `admin-policies.sql`, `chat-policies.sql`, `chat-direct-threads.sql`, `storage-policies.sql`, `realtime.sql`, `location.sql`, `production-hardening.sql`, `alert-triggers.sql`, `profile-follows.sql`, `saved-searches.sql`, `property-reviews.sql`, `roadmap-completion.sql`, then `roadmap-workflows.sql`.
+- Manage database changes through the ordered, timestamped files in `supabase/migrations/`. Use `pnpm run supabase:migrations` to inspect migration history. The root-level SQL files are retained as historical references; do not manually replay them against an existing migrated project.
 - `chat-direct-threads.sql` merges duplicate one-to-one conversations while preserving messages, and adds the atomic RPC used to open a persistent direct thread per user pair.
 - `profile-follows.sql` adds seller/agent follows, follower statistics and alerts for followed listings that are approved or reduced in price.
 - `saved-searches.sql` enables per-user saved filter sets used by the mobile app. `property-reviews.sql` enables one public rating and review per signed-in user per property.

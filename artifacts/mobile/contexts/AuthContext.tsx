@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import type { User } from "@/constants/types";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { isPasswordRecoveryActive, isSupabaseConfigured, setPasswordRecoveryActive, supabase } from "@/lib/supabase";
 
 interface AuthState {
   user: User | null;
@@ -37,6 +38,10 @@ async function loadSupabaseUser(id: string, email: string, metadata: Record<stri
   ]);
   if (profileError) throw new Error(profileError.message);
   if (bookmarksError) throw new Error(bookmarksError.message);
+  if (!profile) throw new Error("Your account profile is missing. Contact HAYAN support to restore access.");
+  if (profile.approval_status !== "pending" && profile.approval_status !== "approved" && profile.approval_status !== "rejected") {
+    throw new Error("Your account approval status is unavailable. Contact HAYAN support.");
+  }
   return {
     id,
     email,
@@ -51,10 +56,7 @@ async function loadSupabaseUser(id: string, email: string, metadata: Record<stri
     bookmarks: (bookmarkRows ?? []).map((bookmark) => bookmark.property_id),
     isAdmin: Boolean(adminRow?.is_active),
     isSuspended: Boolean(profile?.is_suspended),
-    // Older Supabase schemas do not have admin approval yet. Preserve access
-    // for existing accounts until the approval migration is applied; once it
-    // is present, pending/rejected states are enforced as stored.
-    approvalStatus: profile?.approval_status ?? "approved",
+    approvalStatus: profile.approval_status,
   };
 }
 
@@ -112,8 +114,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setState({ user: null, isLoading: false, isAuthenticated: false });
       return;
     }
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
+      // Keep the temporary recovery session alive for the reset form. Normal
+      // profile approval checks resume after updateUser emits USER_UPDATED.
+      if (event === "PASSWORD_RECOVERY" || isPasswordRecoveryActive()) {
+        setBiometricEnabledState(false);
+        setState({ user: null, isLoading: false, isAuthenticated: false });
+        return;
+      }
       if (!session?.user) {
         setBiometricEnabledState(false);
         setState({ user: null, isLoading: false, isAuthenticated: false });
@@ -183,15 +192,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const forgotPassword = useCallback(async (email: string) => {
     if (!supabase) return { success: false, error: UNCONFIGURED_ERROR };
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: "dalka://reset-password" });
+    const redirectTo = Platform.OS === "web" && typeof window !== "undefined"
+      ? new URL("/reset-password", window.location.origin).toString()
+      : "dalka://reset-password";
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
     return error ? { success: false, error: error.message } : { success: true };
   }, []);
 
   const resetPassword = useCallback(async (newPassword: string) => {
     if (!supabase) return { success: false, error: UNCONFIGURED_ERROR };
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    return error ? { success: false, error: error.message } : { success: true };
-  }, []);
+    if (error) return { success: false, error: error.message };
+    setPasswordRecoveryActive(false);
+    try { await refreshSessionUser(); } catch { /* The password has been updated; sign-in can reload the profile. */ }
+    return { success: true };
+  }, [refreshSessionUser]);
 
   const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
     if (!supabase || !state.user) return { success: false, error: state.user ? UNCONFIGURED_ERROR : "Not authenticated" };

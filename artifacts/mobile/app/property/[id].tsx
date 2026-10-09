@@ -2,8 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { Alert, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,11 +44,13 @@ export default function PropertyDetailScreen() {
   const { user, toggleBookmark } = useAuth();
   const { language, t } = useLanguage();
   const { getProperty, incrementViews } = useListings();
-  const { createConversation, conversations } = useChat();
+  const { createConversation } = useChat();
   const [publicPhone, setPublicPhone] = useState<string | null>(null);
   const [ownerVerified, setOwnerVerified] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [contacting, setContacting] = useState(false);
+  const contactInFlight = useRef(false);
   const webTopPad = Platform.OS === "web" ? 67 : 0;
 
   const property = getProperty(id);
@@ -80,30 +82,27 @@ export default function PropertyDetailScreen() {
   }
 
   const handleContact = async () => {
+    if (contactInFlight.current) return;
     if (!user) {
       Alert.alert(t("signInRequired"), t("signInToContact"));
       return;
     }
+    contactInFlight.current = true;
+    setContacting(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const existing = conversations.find((conversation) =>
-        conversation.participants.length === 2
-        && conversation.participants.includes(user.id)
-        && conversation.participants.includes(property.ownerId),
-      );
-      if (existing) {
-        router.push(`/conversation/${existing.id}`);
-      } else {
-        const conversationId = await createConversation({
-          participants: [user.id, property.ownerId],
-          participantNames: { [user.id]: t("you"), [property.ownerId]: t("propertyOwner") },
-          propertyId: property.id,
-          propertyTitle: property.title,
-        });
-        router.push(`/conversation/${conversationId}`);
-      }
+      const conversationId = await createConversation({
+        participants: [user.id, property.ownerId],
+        participantNames: { [user.id]: t("you"), [property.ownerId]: t("propertyOwner") },
+        propertyId: property.id,
+        propertyTitle: property.title,
+      });
+      router.push(`/conversation/${conversationId}`);
     } catch (error) {
       Alert.alert(t("messageSendFailed"), error instanceof Error ? error.message : t("tryAgain"));
+    } finally {
+      contactInFlight.current = false;
+      setContacting(false);
     }
   };
 
@@ -281,11 +280,12 @@ export default function PropertyDetailScreen() {
 
       {isAvailable ? <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8) }]}>
         <Pressable
-          style={({ pressed }) => [styles.contactBtn, { borderColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.contactBtn, { borderColor: colors.primary, borderRadius: colors.radius, opacity: contacting ? 0.65 : pressed ? 0.9 : 1 }]}
           onPress={handleContact}
+          disabled={contacting}
         >
-          <Feather name="message-circle" size={18} color={colors.primary} />
-          <Text style={[styles.contactBtnText, { color: colors.primary }]}>{t("message")}</Text>
+          {contacting ? <ActivityIndicator size="small" color={colors.primary} /> : <Feather name="message-circle" size={18} color={colors.primary} />}
+          <Text style={[styles.contactBtnText, { color: colors.primary }]}>{contacting ? t("openingConversation") : t("message")}</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.scheduleBtn, { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.9 : 1 }]}

@@ -1,7 +1,9 @@
 import { Feather } from "@expo/vector-icons";
+import type { Map as LeafletMap } from "leaflet";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import "leaflet/dist/leaflet.css";
 
 import { FilterSheet } from "@/components/FilterSheet";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -16,10 +18,70 @@ export default function MapSearchScreen() {
   const { t } = useLanguage();
   const { filteredProperties, filters, setFilters } = useListings();
   const [filterVisible, setFilterVisible] = useState(false);
+  const [mapError, setMapError] = useState(false);
+  const mapElement = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<LeafletMap | null>(null);
   const points = filteredProperties.filter((property) => Number.isFinite(property.latitude) && Number.isFinite(property.longitude));
+  const pointsKey = JSON.stringify(points.map(({ id, latitude, longitude, title }) => ({ id, latitude, longitude, title })));
+  const mapPoints = JSON.parse(pointsKey) as Array<{ id: string; latitude: number; longitude: number; title: string }>;
   const centerLatitude = points[0]?.latitude ?? 2.0469;
   const centerLongitude = points[0]?.longitude ?? 45.3182;
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${centerLongitude - 0.12}%2C${centerLatitude - 0.1}%2C${centerLongitude + 0.12}%2C${centerLatitude + 0.1}&layer=mapnik${points.length ? `&marker=${centerLatitude}%2C${centerLongitude}` : ""}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    let activeMap: LeafletMap | null = null;
+
+    const mountMap = async () => {
+      if (!mapElement.current) return;
+      try {
+        const leaflet = await import("leaflet");
+        if (cancelled || !mapElement.current) return;
+        const L = leaflet.default;
+        const map = L.map(mapElement.current, { scrollWheelZoom: false, zoomControl: true });
+        activeMap = map;
+        mapInstance.current = map;
+        setMapError(false);
+        map.setView([centerLatitude, centerLongitude], 13);
+        const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+        });
+        tileLayer.on("tileerror", () => setMapError(true));
+        tileLayer.on("tileload", () => setMapError(false));
+        tileLayer.addTo(map);
+
+        mapPoints.forEach((property) => {
+          const icon = L.divIcon({
+            className: "hayan-map-marker",
+            html: '<span style="display:flex;width:30px;height:30px;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50% 50% 50% 0;background:#b49a65;color:#fff;box-shadow:0 2px 6px #0005;transform:rotate(-45deg)"><span style="font-size:13px;font-weight:700;transform:rotate(45deg)">H</span></span>',
+            iconSize: [32, 40],
+            iconAnchor: [16, 38],
+          });
+          L.marker([property.latitude!, property.longitude!], { icon, title: property.title, alt: property.title })
+            .on("click", () => router.push(`/property/${property.id}`))
+            .addTo(map);
+        });
+
+        if (mapPoints.length > 1) {
+          map.fitBounds(L.latLngBounds(mapPoints.map((property) => [property.latitude, property.longitude])), {
+            padding: [36, 36],
+            maxZoom: 14,
+          });
+        }
+        window.requestAnimationFrame(() => map.invalidateSize());
+      } catch {
+        if (!cancelled) setMapError(true);
+      }
+    };
+
+    void mountMap();
+    return () => {
+      cancelled = true;
+      activeMap?.remove();
+      if (mapInstance.current === activeMap) mapInstance.current = null;
+    };
+  // pointsKey makes the map update only when the displayed pins actually change.
+  }, [pointsKey, centerLatitude, centerLongitude, router]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -39,7 +101,8 @@ export default function MapSearchScreen() {
           {filteredProperties.length === 0 && <Text style={[styles.empty, { color: colors.mutedForeground }]}>{t("noProperties")}</Text>}
         </ScrollView>
         <View style={[styles.mapFrame, { height: width >= 900 ? Math.max(600, height - 64) : Math.max(320, height * 0.48), backgroundColor: colors.card }]}>
-          <iframe title={t("mapSearch")} src={mapUrl} style={{ border: 0, width: "100%", height: "100%" }} loading="lazy" allowFullScreen />
+          <div ref={mapElement} role="application" aria-label={t("mapSearch")} style={{ width: "100%", height: "100%" }} />
+          {mapError && <View style={[styles.mapNotice, { backgroundColor: colors.card }]}><Feather name="alert-circle" size={16} color={colors.primary} /><Text style={[styles.mapNoticeText, { color: colors.foreground }]}>{t("mapTilesError")}</Text></View>}
           {points.length === 0 && <View style={[styles.mapNotice, { backgroundColor: colors.card }]}><Feather name="info" size={16} color={colors.primary} /><Text style={[styles.mapNoticeText, { color: colors.foreground }]}>{t("noMapListings")}</Text></View>}
         </View>
       </View>

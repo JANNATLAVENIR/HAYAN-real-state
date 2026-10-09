@@ -157,6 +157,7 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
 
   const filteredProperties = properties.filter((p) => {
     if (p.status && p.status !== "approved") return false;
+    if (p.availabilityStatus && p.availabilityStatus !== "available") return false;
     if (filters.query) {
       const query = filters.query.trim().toLowerCase();
       if (query && ![p.title, p.city, p.address].some((value) => value.toLowerCase().includes(query))) return false;

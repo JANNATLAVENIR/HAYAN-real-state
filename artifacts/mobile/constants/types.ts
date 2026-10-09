@@ -56,6 +56,10 @@ export interface Conversation {
   participantAvatars?: Record<string, string>;
   propertyId?: string;
   propertyTitle?: string;
+  propertyPrice?: number;
+  propertyLocation?: string;
+  propertyImage?: string;
+  propertyListingType?: "sale" | "rent";
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount: number;

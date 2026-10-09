@@ -2,7 +2,10 @@ import type { Property, User } from "@/constants/types";
 
 /** Rank approved listings against the user's saved-home pattern and role. */
 export function recommendProperties(properties: Property[], user: User | null, limit = 6): Property[] {
-  const approved = properties.filter((property) => !property.status || property.status === "approved");
+  const approved = properties.filter((property) =>
+    (!property.status || property.status === "approved")
+    && (!property.availabilityStatus || property.availabilityStatus === "available")
+  );
   const saved = user ? approved.filter((property) => user.bookmarks.includes(property.id)) : [];
   const savedCities = new Set(saved.map((property) => property.city.toLocaleLowerCase()));
   const savedTypes = new Set(saved.map((property) => property.type));

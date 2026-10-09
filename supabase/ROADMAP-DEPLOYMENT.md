@@ -6,7 +6,7 @@ The ordered migrations now live in `supabase/migrations/` and are the source of 
 
 For a linked project, run `pnpm run supabase:migrations` to inspect history and `pnpm run supabase:push` to apply pending migration files. Add all future schema changes as a new, timestamped file under `supabase/migrations/`.
 
-Run these in the Supabase SQL Editor against the same project configured in `artifacts/mobile/.env`:
+The following root-level SQL files are a historical manual setup sequence for legacy projects created before migration tracking. They are not an alternative migration path and must not be replayed against a project managed by `supabase/migrations/`:
 
 1. `schema.sql`
 2. `viewings-scheduling-hardening.sql`

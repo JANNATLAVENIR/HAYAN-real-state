@@ -12,6 +12,8 @@ interface ChatContextType {
   isLoading: boolean;
   loadError: string | null;
   reload: () => Promise<void>;
+  loadConversationMessages: (conversationId: string) => Promise<void>;
+  receiveRealtimeMessage: (row: Record<string, any>) => void;
   sendMessage: (conversationId: string, senderId: string, text: string) => Promise<void>;
   getConversation: (id: string) => Conversation | undefined;
   createConversation: (conv: Omit<Conversation, "id" | "lastMessage" | "lastMessageTime" | "unreadCount">) => Promise<string>;
@@ -49,6 +51,7 @@ function mapMessage(row: Record<string, any>): Message {
 
 function mapConversation(row: Record<string, any>, profileNames: Record<string, string> = {}, profileAvatars: Record<string, string> = {}, unreadCount = 0, fallbackUserName = "User"): Conversation {
   const members = row.conversation_members ?? [];
+  const property = row.properties ?? null;
   const lastMessage = (row.messages ?? []).sort((a: any, b: any) =>
     String(b.created_at).localeCompare(String(a.created_at)),
   )[0];
@@ -62,6 +65,11 @@ function mapConversation(row: Record<string, any>, profileNames: Record<string, 
       members.filter((member: any) => profileAvatars[member.user_id]).map((member: any) => [member.user_id, profileAvatars[member.user_id]]),
     ),
     propertyId: row.property_id ?? undefined,
+    propertyTitle: property?.title ?? undefined,
+    propertyPrice: property?.price == null ? undefined : Number(property.price),
+    propertyLocation: property ? [property.address, property.city].filter(Boolean).join(", ") : undefined,
+    propertyImage: property?.images?.[0] ?? undefined,
+    propertyListingType: property?.listing_type === "rent" ? "rent" : property?.listing_type === "sale" ? "sale" : undefined,
     lastMessage: lastMessage?.text,
     lastMessageTime: lastMessage?.created_at,
     unreadCount,
@@ -81,12 +89,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setLoadError(null);
     try {
       if (isSupabaseConfigured && supabase) {
-        const [{ data: conversationRows, error: conversationsError }, { data: messageRows, error: messagesError }] = await Promise.all([
-          supabase.from("conversations").select("*, conversation_members(user_id), messages(text, created_at)"),
-          supabase.from("messages").select("*").order("created_at", { ascending: true }),
+        const [{ data: conversationRows, error: conversationsError }, { data: unreadRows, error: unreadError }] = await Promise.all([
+          supabase.from("conversations")
+            .select("*, conversation_members(user_id), properties(title, price, listing_type, address, city, images), messages(text, created_at)")
+            .order("created_at", { ascending: false, referencedTable: "messages" })
+            .limit(1, { referencedTable: "messages" }),
+          supabase.from("messages").select("conversation_id")
+            .is("read_at", null).neq("sender_id", user?.id ?? ""),
         ]);
         if (conversationsError) throw new Error(conversationsError.message);
-        if (messagesError) throw new Error(messagesError.message);
+        if (unreadError) throw new Error(unreadError.message);
         const memberIds = [...new Set((conversationRows ?? []).flatMap((row: any) => (row.conversation_members ?? []).map((member: any) => member.user_id)))];
         const { data: profiles, error: profilesError } = memberIds.length
           ? await supabase.from("public_profiles").select("id,name,avatar_url").in("id", memberIds)
@@ -94,18 +106,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         if (profilesError) throw new Error(profilesError.message);
         const profileNames = Object.fromEntries((profiles ?? []).map((profile: any) => [profile.id, profile.name]));
         const profileAvatars = Object.fromEntries((profiles ?? []).filter((profile: any) => profile.avatar_url).map((profile: any) => [profile.id, profile.avatar_url]));
-        const groupedMessages = (messageRows ?? []).reduce<Record<string, Message[]>>((grouped, row: any) => {
-          const message = mapMessage(row);
-          grouped[message.conversationId] = [...(grouped[message.conversationId] ?? []), message];
-          return grouped;
+        const unreadCounts = (unreadRows ?? []).reduce<Record<string, number>>((counts, row: any) => {
+          counts[row.conversation_id] = (counts[row.conversation_id] ?? 0) + 1;
+          return counts;
         }, {});
         setConversations((conversationRows ?? []).map((row: any) => {
-          const unreadCount = (groupedMessages[row.id] ?? []).filter(
-            (message) => !message.read && message.senderId !== user?.id,
-          ).length;
+          const unreadCount = unreadCounts[row.id] ?? 0;
           return mapConversation(row, profileNames, profileAvatars, unreadCount, t("unknownUser"));
         }));
-        setMessages(groupedMessages);
       } else {
         const convRaw = await AsyncStorage.getItem(CONV_KEY);
         const msgRaw = await AsyncStorage.getItem(MSG_KEY);
@@ -126,6 +134,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
   }, [t, user?.id]);
 
+  const loadConversationMessages = useCallback(async (conversationId: string) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    setMessages((current) => ({ ...current, [conversationId]: [] }));
+    const { data, error } = await supabase.from("messages").select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    const fetched = (data ?? []).map((row: any) => mapMessage(row));
+    setMessages((current) => {
+      const merged = new Map(fetched.map((message) => [message.id, message]));
+      (current[conversationId] ?? []).forEach((message) => merged.set(message.id, message));
+      return {
+        ...current,
+        [conversationId]: [...merged.values()].sort((a, b) => a.timestamp.localeCompare(b.timestamp)),
+      };
+    });
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
     setIsLoading(true);
@@ -134,39 +160,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     void loadData();
   }, [authLoading, user?.id, loadData]);
 
-  useEffect(() => {
-    if (authLoading || !isSupabaseConfigured || !supabase) return;
-    const client = supabase;
-    const channel = client
-      .channel("dalka-messages")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        (payload) => {
-          const message = mapMessage(payload.new as Record<string, any>);
-          setMessages((current) => {
-            const existing = current[message.conversationId] ?? [];
-            if (existing.some((item) => item.id === message.id)) return current;
-            return { ...current, [message.conversationId]: [...existing, message] };
-          });
-          setConversations((current) => current.map((conversation) =>
-            conversation.id === message.conversationId
-              ? {
-                  ...conversation,
-                  lastMessage: message.text,
-                  lastMessageTime: message.timestamp,
-                  unreadCount: message.senderId === user?.id ? conversation.unreadCount : conversation.unreadCount + 1,
-                }
-              : conversation,
-          ));
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void client.removeChannel(channel);
-    };
-  }, [authLoading, user?.id]);
+  const receiveRealtimeMessage = useCallback((row: Record<string, any>) => {
+    const message = mapMessage(row);
+    setMessages((current) => {
+      const existing = current[message.conversationId] ?? [];
+      if (existing.some((item) => item.id === message.id)) return current;
+      return { ...current, [message.conversationId]: [...existing, message] };
+    });
+    setConversations((current) => current.map((conversation) =>
+      conversation.id === message.conversationId
+        ? {
+            ...conversation,
+            lastMessage: message.text,
+            lastMessageTime: message.timestamp,
+            unreadCount: message.senderId === user?.id ? conversation.unreadCount : conversation.unreadCount + 1,
+          }
+        : conversation,
+    ));
+  }, [user?.id]);
 
   const sendMessage = useCallback(async (conversationId: string, senderId: string, text: string) => {
     if (isSupabaseConfigured && supabase) {
@@ -218,10 +229,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const getConversation = useCallback((id: string) => conversations.find((c) => c.id === id), [conversations]);
 
   const createConversation = useCallback(async (conv: Omit<Conversation, "id" | "lastMessage" | "lastMessageTime" | "unreadCount">) => {
+    const participantIds = [...new Set(conv.participants)];
+    if (participantIds.length !== 2) throw new Error("A direct conversation requires exactly two participants");
     if (isSupabaseConfigured && supabase) {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData.user) throw new Error(authError?.message ?? "Sign in to start a conversation");
-      const otherUserId = conv.participants.find((participantId) => participantId !== authData.user.id);
+      if (!participantIds.includes(authData.user.id)) throw new Error("A direct conversation requires you and one other participant");
+      const otherUserId = participantIds.find((participantId) => participantId !== authData.user.id);
       if (!otherUserId) throw new Error("Choose another user to message");
 
       const { data: conversationId, error } = await supabase.rpc("get_or_create_direct_conversation", {
@@ -234,9 +248,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       return conversationId;
     }
 
+    if (!user?.id || !participantIds.includes(user.id)) throw new Error("A direct conversation requires you and one other participant");
     const existing = conversations.find((conversation) =>
       conversation.participants.length === 2
-      && conv.participants.every((participantId) => conversation.participants.includes(participantId)),
+      && participantIds.every((participantId) => conversation.participants.includes(participantId))
+      && (conversation.propertyId ?? undefined) === (conv.propertyId ?? undefined),
     );
     if (existing) return existing.id;
 
@@ -283,7 +299,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
 
   return (
-    <ChatContext.Provider value={{ conversations, messages, isLoading, loadError, reload: loadData, sendMessage, getConversation, createConversation, markAsRead, totalUnread }}>
+    <ChatContext.Provider value={{ conversations, messages, isLoading, loadError, reload: loadData, loadConversationMessages, receiveRealtimeMessage, sendMessage, getConversation, createConversation, markAsRead, totalUnread }}>
       {children}
     </ChatContext.Provider>
   );

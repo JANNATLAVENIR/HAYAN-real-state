@@ -1,8 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Image } from "expo-image";
-import React from "react";
+import React, { useCallback } from "react";
 import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -10,6 +10,7 @@ import { useChat } from "@/contexts/ChatContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useColors } from "@/hooks/useColors";
+import { supabase } from "@/lib/supabase";
 
 function formatTime(timestamp: string | undefined, locale: string) {
   if (!timestamp) return "";
@@ -25,12 +26,24 @@ export default function ChatScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { conversations, isLoading, loadError, reload } = useChat();
+  const { conversations, isLoading, loadError, reload, receiveRealtimeMessage } = useChat();
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const locale = language === "so" ? "so-SO" : "en-US";
   const [searchQuery, setSearchQuery] = React.useState("");
   const webTopPad = Platform.OS === "web" ? 67 : 0;
+
+  useFocusEffect(useCallback(() => {
+    void reload();
+    if (!supabase) return;
+    const channel = supabase
+      .channel("dalka-inbox-messages")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        receiveRealtimeMessage(payload.new as Record<string, any>);
+      })
+      .subscribe();
+    return () => { void supabase?.removeChannel(channel); };
+  }, [reload, receiveRealtimeMessage]));
   const filteredConversations = conversations.filter((conversation) => {
     const participantNames = conversation.participants
       .filter((participantId) => participantId !== user?.id)
@@ -38,6 +51,7 @@ export default function ChatScreen() {
     const searchText = [
       ...participantNames,
       conversation.propertyTitle ?? "",
+      conversation.propertyLocation ?? "",
       conversation.lastMessage ?? "",
     ].join(" ").toLowerCase();
     return searchText.includes(searchQuery.trim().toLowerCase());
@@ -87,6 +101,7 @@ export default function ChatScreen() {
             {(() => {
               const otherParticipantId = item.participants.find((participantId) => participantId !== user?.id);
               const avatarUrl = otherParticipantId ? item.participantAvatars?.[otherParticipantId] : undefined;
+              if (item.propertyImage) return <Image source={{ uri: item.propertyImage }} style={styles.propertyThumb} contentFit="cover" />;
               return avatarUrl ? (
                 <Image source={{ uri: avatarUrl }} style={styles.avatar} contentFit="cover" />
               ) : (
@@ -104,6 +119,13 @@ export default function ChatScreen() {
               </View>
               {item.propertyTitle && (
                 <Text style={[styles.convProperty, { color: colors.primary }]} numberOfLines={1}>{item.propertyTitle}</Text>
+              )}
+              {(item.propertyPrice != null || item.propertyLocation) && (
+                <Text style={[styles.convMeta, { color: colors.mutedForeground }]} numberOfLines={1}>
+                  {item.propertyPrice != null ? `${new Intl.NumberFormat(locale, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(item.propertyPrice)}${item.propertyListingType === "rent" ? t("perMonth") : ""}` : ""}
+                  {item.propertyPrice != null && item.propertyLocation ? " · " : ""}
+                  {item.propertyLocation ?? ""}
+                </Text>
               )}
               <Text style={[styles.convMessage, { color: colors.mutedForeground }]} numberOfLines={1}>
                 {item.lastMessage || t("noMessagesYet")}
@@ -152,11 +174,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   avatar: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
+  propertyThumb: { width: 54, height: 54, borderRadius: 8, backgroundColor: "#EAE6DF" },
   convInfo: { flex: 1, marginLeft: 14 },
   convTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   convName: { fontSize: 15, fontFamily: "Inter_600SemiBold", flex: 1 },
   convTime: { fontSize: 11, fontFamily: "Inter_400Regular", marginLeft: 8 },
   convProperty: { fontSize: 12, fontFamily: "Inter_500Medium", marginTop: 2 },
+  convMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 2 },
   convMessage: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
   badge: { width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", marginLeft: 8 },
   badgeText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },

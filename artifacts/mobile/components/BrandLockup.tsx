@@ -4,7 +4,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 import type { BrandingSettings } from "@/contexts/BrandingContext";
 
-const symbolAsset = require("@/assets/images/icon-512.png");
+const symbolAsset = require("@/assets/images/icon-adaptive-foreground.png");
+const fullLogoAsset = require("@/assets/images/hayan-logo.png");
 
 export function BrandLockup({
   settings,
@@ -17,9 +18,21 @@ export function BrandLockup({
   muted: string;
   compact?: boolean;
 }) {
+  const useOriginalWordmark = settings.showLogo
+    && settings.showBrandName
+    && settings.showBrandTagline
+    && !settings.logoUrl;
+
   return (
     <View style={styles.lockup} accessibilityLabel={[settings.brandName, settings.brandTagline].filter(Boolean).join(" ")}>
-      {settings.showLogo ? (
+      {useOriginalWordmark ? (
+        <Image
+          source={fullLogoAsset}
+          contentFit="contain"
+          style={{ width: settings.logoWidth * 1.6, height: settings.logoHeight * 1.6 }}
+          accessibilityLabel="Hayan Real Estate full logo"
+        />
+      ) : settings.showLogo ? (
         <Image
           source={settings.logoUrl ? { uri: settings.logoUrl } : symbolAsset}
           contentFit="contain"
