@@ -77,7 +77,6 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.page, compact && styles.compactPage]}>
-        <Image source={require("@/assets/images/welcome-house-reference.png")} contentFit="cover" contentPosition="top right" style={styles.loginBackdrop} accessibilityElementsHidden importantForAccessibility="no" pointerEvents="none" />
         <View style={styles.languageRow}>
           <View style={styles.languageSwitch}>
             <Pressable accessibilityRole="button" accessibilityState={{ selected: language === "en" }} onPress={() => void setLanguage("en")}><Text style={[styles.languageText, { color: language === "en" ? colors.primary : colors.mutedForeground }]}>EN</Text></Pressable>
@@ -200,7 +199,6 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 24, alignItems: "center" },
   page: { width: "100%", maxWidth: 520, flexGrow: 1, justifyContent: "space-between", position: "relative" },
   compactPage: { justifyContent: "flex-start" },
-  loginBackdrop: { position: "absolute", width: 160, height: 42, bottom: 58, right: -18, opacity: 0.2 },
   languageRow: { height: 34, alignItems: "flex-end", justifyContent: "center" },
   languageSwitch: { flexDirection: "row", alignItems: "center", gap: 12 },
   languageText: { fontSize: 13, fontFamily: "Georgia" },
