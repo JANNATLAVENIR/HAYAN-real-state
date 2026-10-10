@@ -28,16 +28,31 @@ jobs:
           api() {
             local method="$1"
             local path="$2"
-            curl --silent --show-error \
+            local response
+            local status
+            local body
+            response="$(curl --silent --show-error --write-out 'HTTPSTATUS:%{http_code}' \
               --request "$method" \
               "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${CLOUDFLARE_PROJECT_NAME}${path}" \
               --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-              --header "Content-Type: application/json"
+              --header "Content-Type: application/json")"
+            status="${response##*HTTPSTATUS:}"
+            body="${response%HTTPSTATUS:*}"
+            if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+              echo "Cloudflare API $method request failed (HTTP $status)." >&2
+              jq -c '{errors: [.errors[]? | {code, message}]}' <<<"$body" >&2 || echo "Cloudflare returned an unreadable API response." >&2
+              return 1
+            fi
+            if ! jq -e '.success == true' <<<"$body" >/dev/null; then
+              jq -c '{success, errors: [.errors[]? | {code, message}]}' <<<"$body" >&2 || echo "Cloudflare returned an unreadable API response." >&2
+              return 1
+            fi
+            printf '%s' "$body"
           }
 
           project="$(api GET "")"
-          if ! jq -e '.success == true and .result.name == "hayan-real-state"' <<<"$project" >/dev/null; then
-            jq -c '{success, errors: [.errors[]? | {code, message}]}' <<<"$project" >&2 || echo "Cloudflare returned an unreadable project response." >&2
+          if ! jq -e '.result.name == "hayan-real-state"' <<<"$project" >/dev/null; then
+            echo "Refusing cleanup: Cloudflare returned a different Pages project." >&2
             exit 1
           fi
 
