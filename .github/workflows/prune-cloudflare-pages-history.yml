@@ -28,7 +28,7 @@ jobs:
           api() {
             local method="$1"
             local path="$2"
-            curl --fail-with-body --silent --show-error \
+            curl --silent --show-error \
               --request "$method" \
               "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${CLOUDFLARE_PROJECT_NAME}${path}" \
               --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
@@ -36,7 +36,10 @@ jobs:
           }
 
           project="$(api GET "")"
-          jq -e '.success == true and .result.name == "hayan-real-state"' <<<"$project" >/dev/null
+          if ! jq -e '.success == true and .result.name == "hayan-real-state"' <<<"$project" >/dev/null; then
+            jq -c '{success, errors: [.errors[]? | {code, message}]}' <<<"$project" >&2 || echo "Cloudflare returned an unreadable project response." >&2
+            exit 1
+          fi
 
           production_branch="$(jq -r '.result.production_branch // .result.source.config.production_branch // empty' <<<"$project")"
           live_id="$(jq -r '.result.canonical_deployment.id // empty' <<<"$project")"
