@@ -82,9 +82,9 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           right: 0 !important;
           bottom: 0 !important;
           z-index: 1000 !important;
-          height: 52px !important;
+          height: calc(52px + env(safe-area-inset-bottom, 0px)) !important;
           min-height: 52px !important;
-          padding: 0 !important;
+          padding: 0 0 env(safe-area-inset-bottom, 0px) !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
         }
