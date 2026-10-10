@@ -72,7 +72,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 24 : 16), paddingBottom: insets.bottom + (Platform.OS === "web" ? 0 : 18) }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 14 : 16), paddingBottom: insets.bottom + (Platform.OS === "web" ? 0 : 18) }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -86,12 +86,6 @@ export default function LoginScreen() {
         </View>
         <View style={[styles.brandSection, compact && styles.compactBrandSection]}>
           <Image source={require("@/assets/images/hayan-logo.png")} contentFit="contain" style={styles.brandLogo} accessibilityLabel="HAYÁN Real Estate" />
-        </View>
-
-        <View pointerEvents="none" style={styles.brandPromise}>
-          <Text style={[styles.brandPromiseLine, { color: colors.mutedForeground }]}>Better Homes</Text>
-          <Text style={[styles.brandPromiseLine, { color: colors.mutedForeground }]}>Brighter Futures</Text>
-          <View style={[styles.brandPromiseAccent, { backgroundColor: colors.primary }]} />
         </View>
 
         <View style={styles.formSection}>
@@ -205,10 +199,7 @@ const styles = StyleSheet.create({
   languageDivider: { fontSize: 13 },
   brandSection: { alignItems: "center", marginTop: 12, marginBottom: 18 },
   compactBrandSection: { marginTop: 4, marginBottom: 12 },
-  brandLogo: { width: 220, height: 166 },
-  brandPromise: { position: "absolute", left: 0, bottom: 82, zIndex: 1 },
-  brandPromiseLine: { fontSize: 11, lineHeight: 16, letterSpacing: 0.5, fontFamily: "Georgia" },
-  brandPromiseAccent: { width: 18, height: 1, marginTop: 8 },
+  brandLogo: { width: 190, height: 144 },
   formSection: { flex: 1 },
   welcomeText: { fontSize: 38, lineHeight: 46, fontFamily: "Georgia", letterSpacing: -0.8 },
   subtitleText: { fontSize: 14, lineHeight: 21, fontFamily: "Inter_400Regular", marginTop: 7, marginBottom: 22 },
