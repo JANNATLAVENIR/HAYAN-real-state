@@ -22,11 +22,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const desktop = Platform.OS === "web" && width >= 1000;
   const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
-  const hideMobileNav = [
-    "conversation", "property", "create-listing", "schedule-viewing", "edit-profile",
-    "change-password", "admin", "reset-password", "security-settings",
-    "notification-settings", "user",
-  ].includes(String(segments[0] ?? ""));
+  const hideMobileNav = segments[0] !== "(tabs)";
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },

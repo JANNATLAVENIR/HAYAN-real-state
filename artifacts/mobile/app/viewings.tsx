@@ -9,7 +9,6 @@ import type { ScheduledViewing } from "@/constants/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useListings } from "@/contexts/ListingsContext";
-import { useBranding } from "@/contexts/BrandingContext";
 import { useColors } from "@/hooks/useColors";
 
 type ViewingFilter = "all" | "pending" | "confirmed" | "past";
@@ -37,7 +36,6 @@ export default function ViewingsScreen() {
   const { width } = useWindowDimensions();
   const { user } = useAuth();
   const { language, t } = useLanguage();
-  const { settings } = useBranding();
   const { viewings, isLoading, refreshListings, cancelViewing, respondToViewing, rescheduleViewing } = useListings();
   const [filter, setFilter] = useState<ViewingFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
@@ -145,27 +143,27 @@ export default function ViewingsScreen() {
         </Pressable>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+      <View style={[styles.filters, compact && styles.compactFilters]}>
         {filters.map((item) => {
           const selected = filter === item.key;
           return (
             <Pressable
               key={item.key}
               onPress={() => { Haptics.selectionAsync(); setFilter(item.key); }}
-              style={[styles.filterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : colors.card, borderRadius: colors.radius }]}
+              style={[styles.filterChip, compact && styles.compactFilterChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : colors.card, borderRadius: colors.radius }]}
             >
               <Text style={[styles.filterText, { color: selected ? colors.primaryForeground : colors.foreground }]}>{item.label}</Text>
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       {isLoading && !refreshing ? (
         <ActivityIndicator color={colors.primary} style={styles.loading} />
       ) : (
         <ScrollView
           contentContainerStyle={[styles.list, visibleViewings.length === 0 && styles.emptyList, {
-            paddingBottom: insets.bottom + (Platform.OS === "web" && settings.showFooter ? settings.navHeight + settings.footerHeight / 4 + 24 : 36),
+            paddingBottom: insets.bottom + 36,
           }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.primary} />}
           showsVerticalScrollIndicator={false}
@@ -289,8 +287,10 @@ const styles = StyleSheet.create({
   guestLoginButton: { marginTop: 18, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
   guestLoginText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   subtitle: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 4 },
-  filters: { gap: 8, paddingHorizontal: 20, paddingVertical: 14 },
-  filterChip: { paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1 },
+  filters: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 20, paddingVertical: 12 },
+  compactFilters: { justifyContent: "space-between" },
+  filterChip: { alignItems: "center", justifyContent: "center", paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1 },
+  compactFilterChip: { width: "48%", minHeight: 42, paddingHorizontal: 8 },
   filterText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   list: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 36, gap: 12 },
   emptyList: { flexGrow: 1 },
