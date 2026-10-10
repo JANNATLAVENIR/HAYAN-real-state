@@ -82,8 +82,8 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           right: 0 !important;
           bottom: 0 !important;
           z-index: 1000 !important;
-          height: calc(var(--hayan-nav-content-height, 68px) + env(safe-area-inset-bottom, 0px)) !important;
-          padding-bottom: 0 !important;
+          height: calc(var(--hayan-nav-content-height, 60px) + env(safe-area-inset-bottom, 0px)) !important;
+          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
         }
@@ -172,7 +172,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
     if (Platform.OS !== "web" || typeof document === "undefined") return;
     document.documentElement.style.setProperty("--hayan-app-background", colors.background);
     document.documentElement.style.setProperty("--hayan-nav-background", colors.card);
-    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${settings.navHeight}px`);
+    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${Math.min(settings.navHeight, 60)}px`);
   }, [colors.background, colors.card, settings.navHeight]);
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
@@ -214,7 +214,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileNav = (
-    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
+    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: Platform.OS === "web" ? Math.min(settings.navHeight, 60) : settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
       {mobileItems.map((item) => navItem(item, true))}
     </View>
   );
