@@ -108,7 +108,9 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
         }
         html[data-hayan-keyboard-open="true"] #hayan-chat-composer {
+          padding-top: 0 !important;
           padding-bottom: 0 !important;
+          border-top-width: 0 !important;
         }
       }
     `;

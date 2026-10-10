@@ -46,7 +46,7 @@ export default function ConversationScreen() {
       root.style.setProperty("--hayan-chat-viewport-top", `${viewport.offsetTop}px`);
       const inputFocused = document.activeElement?.id === "chat-message-input";
       const viewportReduced = window.innerHeight - viewport.height > 80;
-      root.dataset.hayanKeyboardOpen = inputFocused || viewportReduced ? "true" : "false";
+      root.dataset.hayanKeyboardOpen = inputFocused && viewportReduced ? "true" : "false";
     };
     updateViewport();
     viewport.addEventListener("resize", updateViewport);
@@ -239,7 +239,8 @@ export default function ConversationScreen() {
               onChangeText={setText}
               onFocus={() => {
                 if (Platform.OS === "web" && typeof document !== "undefined") {
-                  document.documentElement.dataset.hayanKeyboardOpen = "true";
+                  const viewportReduced = typeof window !== "undefined" && !!window.visualViewport && window.innerHeight - window.visualViewport.height > 80;
+                  document.documentElement.dataset.hayanKeyboardOpen = viewportReduced ? "true" : "false";
                 }
               }}
               onBlur={() => {
