@@ -57,6 +57,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         height: 100% !important;
         min-height: 100% !important;
         margin: 0 !important;
+        background-color: var(--hayan-app-background, #fff) !important;
         overflow: hidden !important;
         overscroll-behavior: none !important;
       }
@@ -75,6 +76,11 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       }
       @media (max-width: 999px) {
         input, textarea, select { font-size: 16px !important; }
+        #hayan-mobile-nav {
+          height: calc(var(--hayan-nav-content-height, 68px) + env(safe-area-inset-bottom, 0px)) !important;
+          padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
+          box-sizing: border-box !important;
+        }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
       #hayan-chat-screen {
@@ -133,6 +139,12 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    document.documentElement.style.setProperty("--hayan-app-background", colors.background);
+    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${settings.navHeight}px`);
+  }, [colors.background, settings.navHeight]);
+
   const desktop = Platform.OS === "web" && width >= 1000;
   const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
   const hideMobileNav = segments[0] !== "(tabs)";
@@ -176,7 +188,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileNav = (
-    <View style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: settings.navHeight, paddingBottom: settings.footerHeight / 4 }]}>
+    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: settings.navHeight, paddingBottom: settings.footerHeight / 4 }]}>
       {mobileItems.map((item) => navItem(item, true))}
     </View>
   );
