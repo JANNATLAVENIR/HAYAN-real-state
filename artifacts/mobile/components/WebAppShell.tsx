@@ -82,14 +82,10 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           right: 0 !important;
           bottom: 0 !important;
           z-index: 1000 !important;
-          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-          box-sizing: content-box !important;
-          background: linear-gradient(
-            to bottom,
-            var(--hayan-nav-background, #ffffff) 0,
-            var(--hayan-nav-background, #ffffff) calc(100% - env(safe-area-inset-bottom, 0px)),
-            var(--hayan-app-background, #FAF8F5) 100%
-          ) !important;
+          height: var(--hayan-nav-content-height, 68px) !important;
+          padding-bottom: 0 !important;
+          box-sizing: border-box !important;
+          background: var(--hayan-nav-background, #ffffff) !important;
         }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
@@ -176,7 +172,8 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
     if (Platform.OS !== "web" || typeof document === "undefined") return;
     document.documentElement.style.setProperty("--hayan-app-background", colors.background);
     document.documentElement.style.setProperty("--hayan-nav-background", colors.card);
-  }, [colors.background, colors.card]);
+    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${settings.navHeight}px`);
+  }, [colors.background, colors.card, settings.navHeight]);
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
