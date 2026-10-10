@@ -77,9 +77,16 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       @media (max-width: 999px) {
         input, textarea, select { font-size: 16px !important; }
         #hayan-mobile-nav {
-          height: var(--hayan-nav-content-height, 68px) !important;
-          padding-bottom: 0 !important;
-          box-sizing: border-box !important;
+          position: fixed !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          z-index: 1000 !important;
+          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+          box-sizing: content-box !important;
+        }
+        #hayan-main-content {
+          padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
         }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
@@ -228,7 +235,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           </View>
         </View>
       ) : null}
-      <View style={styles.main}>{children}</View>
+      <View nativeID={showMobileFooter ? "hayan-main-content" : undefined} style={styles.main}>{children}</View>
       {showMobileFooter && mobileNav}
     </View>
   );
