@@ -43,6 +43,8 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact, styl
   const { language, t } = useLanguage();
   const locale = language === "so" ? "so-SO" : "en-US";
   const router = useRouter();
+  const [imageLoadFailed, setImageLoadFailed] = React.useState(false);
+  const imageSource = imageLoadFailed ? heroImg : getPropertyImage(property.images);
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -64,7 +66,7 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact, styl
         ]}
         onPress={handlePress}
       >
-        <Image source={getPropertyImage(property.images)} style={styles.compactImage} contentFit="cover" />
+        <Image source={imageSource} placeholder={heroImg} style={styles.compactImage} contentFit="cover" onError={() => setImageLoadFailed(true)} />
         <View style={styles.compactInfo}>
           <Text style={[styles.compactTitle, { color: colors.foreground }]} numberOfLines={1}>{property.title}</Text>
           <Text style={[styles.compactLocation, { color: colors.mutedForeground }]} numberOfLines={1}>
@@ -88,7 +90,7 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact, styl
       onPress={handlePress}
     >
       <View style={styles.imageWrapper}>
-        <Image source={getPropertyImage(property.images)} style={styles.image} contentFit="cover" />
+        <Image source={imageSource} placeholder={heroImg} style={styles.image} contentFit="cover" onError={() => setImageLoadFailed(true)} />
         {property.featured && (
           <View style={[styles.featuredBadge, { backgroundColor: colors.primary }]}>
             <Text style={[styles.featuredText, { color: colors.primaryForeground }]}>{t("featured")}</Text>

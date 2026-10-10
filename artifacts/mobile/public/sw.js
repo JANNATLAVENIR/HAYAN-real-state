@@ -1,4 +1,4 @@
-const CACHE_NAME = "hayan-pwa-v7";
+const CACHE_NAME = "hayan-pwa-v8";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

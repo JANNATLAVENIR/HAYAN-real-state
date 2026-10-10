@@ -174,7 +174,7 @@ export default function DiscoveryScreen() {
             </View>
           )
         }
-        contentContainerStyle={[styles.listContent, { paddingBottom: Platform.OS === "web" ? Math.max(insets.bottom + 84, 88) : insets.bottom + 100 }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + (Platform.OS === "web" ? 52 : 100) }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       />
