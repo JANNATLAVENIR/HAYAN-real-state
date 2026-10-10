@@ -59,12 +59,12 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact, styl
       <Pressable
         style={({ pressed }) => [
           styles.compactContainer,
-          { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 18, opacity: pressed ? 0.95 : 1 },
+          { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius, opacity: pressed ? 0.95 : 1 },
           style,
         ]}
         onPress={handlePress}
       >
-        <Image source={getPropertyImage(property.images)} style={styles.compactImage} contentFit="cover" />
+        <Image source={getPropertyImage(property.images)} style={[styles.compactImage, { borderRadius: colors.radius }]} contentFit="cover" />
         <View style={styles.compactInfo}>
           <Text style={[styles.compactTitle, { color: colors.foreground }]} numberOfLines={1}>{property.title}</Text>
           <Text style={[styles.compactLocation, { color: colors.mutedForeground }]} numberOfLines={1}>
@@ -82,13 +82,13 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact, styl
     <Pressable
       style={({ pressed }) => [
         styles.container,
-        { backgroundColor: colors.card, borderRadius: 22, borderColor: colors.border, opacity: pressed ? 0.97 : 1 },
+        { backgroundColor: colors.card, borderRadius: colors.radius, opacity: pressed ? 0.97 : 1 },
         style,
       ]}
       onPress={handlePress}
     >
       <View style={styles.imageWrapper}>
-        <Image source={getPropertyImage(property.images)} style={styles.image} contentFit="cover" />
+        <Image source={getPropertyImage(property.images)} style={[styles.image, { borderTopLeftRadius: colors.radius, borderTopRightRadius: colors.radius }]} contentFit="cover" />
         {property.featured && (
           <View style={[styles.featuredBadge, { backgroundColor: colors.primary }]}>
             <Text style={[styles.featuredText, { color: colors.primaryForeground }]}>{t("featured")}</Text>
@@ -147,50 +147,48 @@ export function PropertyCard({ property, isBookmarked, onBookmark, compact, styl
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 20,
-    marginBottom: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: "hidden",
-    shadowColor: "#17202A",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
     elevation: 3,
   },
   imageWrapper: { position: "relative" },
-  image: { width: "100%", height: 205 },
+  image: { width: "100%", height: 220 },
   featuredBadge: {
     position: "absolute",
-    top: 13,
-    left: 13,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 20,
+    top: 16,
+    left: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   featuredText: { fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 1.5 },
   typeBadge: {
     position: "absolute",
-    bottom: 13,
-    left: 13,
+    bottom: 16,
+    left: 16,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
-  availabilityBadge: { position: "absolute", bottom: 13, right: 13, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 },
+  availabilityBadge: { position: "absolute", bottom: 16, right: 16, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
   typeText: { fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 1, color: "#fff" },
-  bookmarkBtn: { position: "absolute", top: 12, right: 12 },
+  bookmarkBtn: { position: "absolute", top: 16, right: 16 },
   bookmarkCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
-  info: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  price: { fontSize: 20, fontFamily: "Inter_700Bold", letterSpacing: 0.1 },
-  title: { fontSize: 16, fontFamily: "Inter_600SemiBold", marginTop: 3, letterSpacing: 0.1 },
+  info: { padding: 16 },
+  price: { fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  title: { fontSize: 16, fontFamily: "Inter_600SemiBold", marginTop: 4, letterSpacing: 0.3 },
   locationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 },
   location: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  statsRow: { flexDirection: "row", alignItems: "center", marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E8E3DC" },
+  statsRow: { flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E8E3DC" },
   stat: { flexDirection: "row", alignItems: "center", gap: 5, flex: 1 },
   statText: { fontSize: 12, fontFamily: "Inter_500Medium" },
   statDivider: { width: 1, height: 16 },
@@ -198,10 +196,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 18,
     marginBottom: 12,
   },
-  compactImage: { width: 82, height: 82, borderRadius: 13 },
+  compactImage: { width: 80, height: 80 },
   compactInfo: { flex: 1, marginLeft: 12, justifyContent: "center" },
   compactTitle: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   compactLocation: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },

@@ -40,7 +40,7 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
     setLoadError(null);
     try {
       if (!supabase) throw new Error("Supabase is not configured. Notifications are unavailable.");
-      const { data, error } = await supabase.from("alerts").select("*").neq("type", "message").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("alerts").select("*").order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
       setAlerts((data ?? []).map(mapAlert));
     } catch (error) {
@@ -68,7 +68,7 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
         async (payload) => {
           const { data: authData } = await client.auth.getUser();
           const alert = payload.new as Record<string, any>;
-          if (authData.user?.id !== alert.user_id || alert.type === "message") return;
+          if (authData.user?.id !== alert.user_id) return;
           setAlerts((current) => {
             if (current.some((item) => item.id === alert.id)) return current;
             return [mapAlert(alert), ...current];
@@ -107,7 +107,6 @@ export function AlertsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addAlert = useCallback(async (alert: Omit<DalkaAlert, "id" | "timestamp" | "read">) => {
-    if (alert.type === "message") throw new Error("Chat messages appear in Chat, not Alerts.");
     if (!supabase) throw new Error("Supabase is not configured. Notifications cannot be created.");
     const { data: authData } = await supabase.auth.getUser();
     if (!authData.user) throw new Error("You must be signed in to create an alert");

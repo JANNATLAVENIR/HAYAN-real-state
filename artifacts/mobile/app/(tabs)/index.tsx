@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
-import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -117,17 +116,6 @@ export default function DiscoveryScreen() {
         )}
         ListHeaderComponent={
           <View>
-            {!searchQuery && !hasActiveFilters ? (
-              <View style={styles.heroCard}>
-                <Image source={require("@/assets/images/hero-property.png")} style={StyleSheet.absoluteFill} contentFit="cover" />
-                <View style={styles.heroShade} />
-                <View style={styles.heroContent}>
-                  <Text style={styles.heroEyebrow}>HAYAN REAL ESTATE</Text>
-                  <Text style={styles.heroTitle}>Find your{ "\n" }dream property</Text>
-                  <Text style={styles.heroCaption}>Homes · Land · Apartments · Commercial</Text>
-                </View>
-              </View>
-            ) : null}
             {recommendations.length > 0 ? (
               <View style={styles.recommendationsSection}>
                 <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("recommendedForYou")}</Text>
@@ -186,15 +174,15 @@ export default function DiscoveryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 12 },
-  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  header: { paddingHorizontal: 20, paddingBottom: 16 },
+  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 },
   headerActions: { flexDirection: "row", gap: 8 },
   greeting: { fontSize: 13, fontFamily: "Inter_400Regular", letterSpacing: 0.5 },
   brandLogo: { width: 84, height: 66, marginTop: 2 },
   filterBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 15,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -204,25 +192,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    paddingVertical: 13,
+    paddingVertical: 12,
     borderWidth: 1,
-    borderRadius: 16,
-    shadowColor: "#1C2024",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
     gap: 10,
   },
   searchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
-  listContent: { paddingTop: 4 },
-  heroCard: { height: 156, marginHorizontal: 20, marginTop: 4, marginBottom: 24, borderRadius: 22, overflow: "hidden", justifyContent: "flex-end", backgroundColor: "#AAA" },
-  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,14,17,0.32)" },
-  heroContent: { padding: 18, gap: 5 },
-  heroEyebrow: { color: "#F1D9A5", fontSize: 9, fontFamily: "Inter_600SemiBold", letterSpacing: 2 },
-  heroTitle: { color: "#FFFFFF", fontSize: 24, lineHeight: 27, fontFamily: "Inter_700Bold" },
-  heroCaption: { color: "rgba(255,255,255,0.88)", fontSize: 10, fontFamily: "Inter_500Medium" },
+  listContent: { paddingTop: 8 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, marginBottom: 16, marginTop: 8 },
-  sectionTitle: { fontSize: 16, fontFamily: "Inter_600SemiBold", letterSpacing: 0.2 },
+  sectionTitle: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 2 },
   sectionCount: { fontSize: 12, fontFamily: "Inter_400Regular" },
   recommendationsSection: { paddingHorizontal: 20, paddingTop: 8, marginBottom: 8 },
   loadError: { paddingHorizontal: 20, paddingVertical: 10, fontSize: 12, fontFamily: "Inter_400Regular" },

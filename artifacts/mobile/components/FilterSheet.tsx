@@ -60,14 +60,14 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
                 key={lt}
                 style={[
                   styles.chip,
-                  { borderColor: local.listingType === lt ? colors.foreground : colors.border, backgroundColor: local.listingType === lt ? colors.foreground : "transparent", borderRadius: 22 },
+                  { borderColor: local.listingType === lt ? colors.primary : colors.border, backgroundColor: local.listingType === lt ? colors.primary : "transparent" },
                 ]}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLocal({ ...local, listingType: local.listingType === lt ? undefined : lt });
                 }}
               >
-                <Text style={[styles.chipText, { color: local.listingType === lt ? colors.background : colors.foreground }]}>
+                <Text style={[styles.chipText, { color: local.listingType === lt ? colors.primaryForeground : colors.foreground }]}>
                   {lt === "sale" ? t("forSale") : t("forRent")}
                 </Text>
               </Pressable>
@@ -81,10 +81,10 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
               return (
                 <Pressable
                   key={pt}
-                  style={[styles.chip, { borderColor: selected ? colors.foreground : colors.border, backgroundColor: selected ? colors.foreground : "transparent" }]}
+                  style={[styles.chip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : "transparent" }]}
                   onPress={() => toggleType(pt)}
                 >
-                  <Text style={[styles.chipText, { color: selected ? colors.background : colors.foreground }]}>{t(pt)}</Text>
+                  <Text style={[styles.chipText, { color: selected ? colors.primaryForeground : colors.foreground }]}>{t(pt)}</Text>
                 </Pressable>
               );
             })}
@@ -124,13 +124,13 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
               return (
                 <Pressable
                   key={n}
-                  style={[styles.numChip, { borderColor: selected ? colors.foreground : colors.border, backgroundColor: selected ? colors.foreground : "transparent" }]}
+                  style={[styles.numChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : "transparent" }]}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setLocal({ ...local, minBedrooms: selected ? undefined : n });
                   }}
                 >
-                  <Text style={[styles.chipText, { color: selected ? colors.background : colors.foreground }]}>{n}+</Text>
+                  <Text style={[styles.chipText, { color: selected ? colors.primaryForeground : colors.foreground }]}>{n}+</Text>
                 </Pressable>
               );
             })}
@@ -141,8 +141,8 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
             {[1, 2, 3, 4].map((n) => {
               const selected = local.minBathrooms === n;
               return (
-                <Pressable key={`bath-${n}`} style={[styles.numChip, { borderColor: selected ? colors.foreground : colors.border, backgroundColor: selected ? colors.foreground : "transparent" }]} onPress={() => setLocal({ ...local, minBathrooms: selected ? undefined : n })}>
-                  <Text style={[styles.chipText, { color: selected ? colors.background : colors.foreground }]}>{n}+</Text>
+                <Pressable key={`bath-${n}`} style={[styles.numChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : "transparent" }]} onPress={() => setLocal({ ...local, minBathrooms: selected ? undefined : n })}>
+                  <Text style={[styles.chipText, { color: selected ? colors.primaryForeground : colors.foreground }]}>{n}+</Text>
                 </Pressable>
               );
             })}
@@ -150,20 +150,20 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
 
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("petFriendlyFilter")}</Text>
           <Pressable
-            style={[styles.chip, { borderColor: local.petFriendly ? colors.foreground : colors.border, backgroundColor: local.petFriendly ? colors.foreground : "transparent", alignSelf: "flex-start", borderRadius: 22 }]}
+            style={[styles.chip, { borderColor: local.petFriendly ? colors.primary : colors.border, backgroundColor: local.petFriendly ? colors.primary : "transparent", alignSelf: "flex-start" }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setLocal({ ...local, petFriendly: local.petFriendly ? undefined : true });
             }}
           >
-            <Text style={[styles.chipText, { color: local.petFriendly ? colors.background : colors.foreground }]}>{t("petFriendlyOnly")}</Text>
+            <Text style={[styles.chipText, { color: local.petFriendly ? colors.primaryForeground : colors.foreground }]}>{t("petFriendlyOnly")}</Text>
           </Pressable>
 
           <Pressable
-            style={[styles.chip, { borderColor: local.parking ? colors.foreground : colors.border, backgroundColor: local.parking ? colors.foreground : "transparent", alignSelf: "flex-start", marginTop: 8, borderRadius: 22 }]}
+            style={[styles.chip, { borderColor: local.parking ? colors.primary : colors.border, backgroundColor: local.parking ? colors.primary : "transparent", alignSelf: "flex-start", marginTop: 8 }]}
             onPress={() => setLocal({ ...local, parking: local.parking ? undefined : true })}
           >
-            <Text style={[styles.chipText, { color: local.parking ? colors.background : colors.foreground }]}>{t("parkingAvailable")}</Text>
+            <Text style={[styles.chipText, { color: local.parking ? colors.primaryForeground : colors.foreground }]}>{t("parkingAvailable")}</Text>
           </Pressable>
 
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("city")}</Text>
@@ -181,8 +181,8 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
           <View style={{ height: 40 }} />
         </ScrollView>
         <View style={[styles.footer, { borderTopColor: colors.border }]}>
-          <Pressable style={[styles.applyBtn, { backgroundColor: colors.foreground, borderRadius: 28 }]} onPress={apply}>
-            <Text style={[styles.applyText, { color: colors.background }]}>{t("applyFilters")}</Text>
+          <Pressable style={[styles.applyBtn, { backgroundColor: colors.primary, borderRadius: colors.radius }]} onPress={apply}>
+            <Text style={[styles.applyText, { color: colors.primaryForeground }]}>{t("applyFilters")}</Text>
           </Pressable>
         </View>
       </View>
@@ -193,20 +193,20 @@ export function FilterSheet({ visible, onClose, filters, onApply }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 },
-  headerTitle: { fontSize: 20, fontFamily: "Inter_600SemiBold", letterSpacing: 0.2 },
+  headerTitle: { fontSize: 14, fontFamily: "Inter_600SemiBold", letterSpacing: 2 },
   clearText: { fontSize: 14, fontFamily: "Inter_500Medium" },
   content: { flex: 1, paddingHorizontal: 20 },
-  sectionTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", letterSpacing: 0.3, marginTop: 24, marginBottom: 12 },
+  sectionTitle: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 2, marginTop: 28, marginBottom: 12 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, borderWidth: 1 },
-  numChip: { width: 48, height: 42, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, borderWidth: 1 },
+  numChip: { width: 48, height: 42, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   chipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  priceInput: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 12 },
+  priceInput: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 12 },
   priceLabel: { fontSize: 10, fontFamily: "Inter_500Medium", letterSpacing: 1, marginBottom: 4 },
   input: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   priceDash: { width: 16, height: 1 },
-  cityInput: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 12, gap: 8 },
+  cityInput: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, gap: 8 },
   cityTextInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
   footer: { borderTopWidth: StyleSheet.hairlineWidth, padding: 20, paddingBottom: 36 },
   applyBtn: { paddingVertical: 16, alignItems: "center" },

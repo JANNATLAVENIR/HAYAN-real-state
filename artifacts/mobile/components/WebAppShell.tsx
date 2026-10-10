@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { usePathname, useRouter, useSegments } from "expo-router";
-import React, { useEffect } from "react";
+import React from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,120 +20,8 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const segments = useSegments();
   const router = useRouter();
-
-  useEffect(() => {
-    if (Platform.OS !== "web" || typeof document === "undefined" || typeof window === "undefined") return;
-
-    const viewportMeta = document.querySelector('meta[name="viewport"]');
-    const previousViewport = viewportMeta?.getAttribute("content");
-    const viewportContent = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
-    if (viewportMeta) viewportMeta.setAttribute("content", viewportContent);
-
-    const setMeta = (name: string, content: string) => {
-      let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
-      if (!meta) {
-        meta = document.createElement("meta");
-        meta.name = name;
-        document.head.appendChild(meta);
-      }
-      meta.content = content;
-    };
-    setMeta("apple-mobile-web-app-capable", "yes");
-    setMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
-    setMeta("apple-mobile-web-app-title", "HAYAN Real Estate");
-
-    let manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-    if (!manifestLink) {
-      manifestLink = document.createElement("link");
-      manifestLink.rel = "manifest";
-      manifestLink.href = "/manifest.webmanifest";
-      document.head.appendChild(manifestLink);
-    }
-
-    const chatFocusStyle = document.createElement("style");
-    chatFocusStyle.textContent = `
-      html, body, #root {
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 100% !important;
-        margin: 0 !important;
-        overflow: hidden !important;
-        overscroll-behavior: none !important;
-      }
-      body, #root {
-        position: fixed !important;
-        inset: 0 !important;
-      }
-      #hayan-app-shell {
-        width: 100% !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        min-height: 0 !important;
-        overflow: hidden !important;
-        overscroll-behavior: none !important;
-        touch-action: pan-x pan-y;
-      }
-      @media (max-width: 999px) {
-        input, textarea, select { font-size: 16px !important; }
-      }
-      #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
-      #hayan-chat-screen {
-        display: flex !important;
-        flex-direction: column !important;
-        min-height: 0 !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        height: var(--hayan-chat-viewport-height, 100dvh) !important;
-      }
-      @media (max-width: 999px) {
-        #hayan-chat-screen {
-          position: fixed !important;
-          inset: var(--hayan-chat-viewport-top, 0px) 0 auto 0 !important;
-          height: var(--hayan-chat-viewport-height, 100dvh) !important;
-          max-height: none !important;
-          z-index: 20 !important;
-        }
-        #hayan-chat-messages {
-          flex: 1 1 0% !important;
-          min-height: 0 !important;
-          overflow-y: auto !important;
-          overscroll-behavior: contain;
-          -webkit-overflow-scrolling: touch;
-        }
-        #hayan-chat-composer {
-          position: sticky !important;
-          bottom: 0 !important;
-          z-index: 1 !important;
-          flex: 0 0 auto !important;
-          padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
-        }
-        html[data-hayan-keyboard-open="true"] #hayan-chat-composer {
-          padding-bottom: 0 !important;
-        }
-      }
-    `;
-    document.head.appendChild(chatFocusStyle);
-
-    const preventGestureZoom = (event: Event) => event.preventDefault();
-    const preventPinchZoom = (event: TouchEvent) => {
-      if (event.touches.length > 1) event.preventDefault();
-    };
-    document.addEventListener("gesturestart", preventGestureZoom, { passive: false });
-    document.addEventListener("gesturechange", preventGestureZoom, { passive: false });
-    document.addEventListener("touchmove", preventPinchZoom, { passive: false });
-
-    return () => {
-      document.removeEventListener("gesturestart", preventGestureZoom);
-      document.removeEventListener("gesturechange", preventGestureZoom);
-      document.removeEventListener("touchmove", preventPinchZoom);
-      chatFocusStyle.remove();
-      if (viewportMeta && previousViewport) viewportMeta.setAttribute("content", previousViewport);
-    };
-  }, []);
-
   const desktop = Platform.OS === "web" && width >= 1000;
   const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
-  const hideMobileNav = segments[0] !== "(tabs)";
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
@@ -164,9 +52,9 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
         onPress={() => router.push(item.href as never)}
-        style={({ pressed }) => [compact ? styles.mobileItem : styles.sideItem, { backgroundColor: active && !compact ? "rgba(201,169,110,0.14)" : "transparent", opacity: pressed ? 0.78 : 1 }]}
+        style={({ pressed }) => [compact ? styles.mobileItem : styles.sideItem, { backgroundColor: active ? "rgba(201,169,110,0.14)" : "transparent", opacity: pressed ? 0.78 : 1 }]}
       >
-        <Feather name={item.icon} size={compact ? 20 : 18} color={active ? (compact ? colors.foreground : colors.primary) : colors.mutedForeground} />
+        <Feather name={item.icon} size={compact ? 20 : 18} color={active ? colors.primary : colors.mutedForeground} />
         {!compact && <Text numberOfLines={1} style={[styles.sideLabel, { color: active ? colors.primary : colors.foreground }]}>{title}</Text>}
         {compact && settings.showNavLabels && <Text numberOfLines={1} style={[styles.mobileLabel, { color: active ? colors.primary : colors.mutedForeground }]}>{title}</Text>}
       </Pressable>
@@ -182,7 +70,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   if (Platform.OS !== "web") return <>{children}</>;
 
   return (
-      <View nativeID="hayan-app-shell" style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       {desktop && !isAuthRoute ? (
         <View style={[styles.sidebar, { backgroundColor: colors.card, borderRightColor: colors.border }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="HAYÁN Real Estate" onPress={() => router.push("/(tabs)" as never)} style={[styles.brand, { paddingHorizontal: settings.headerPadding }]}>
@@ -214,7 +102,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         </View>
       ) : null}
       <View style={styles.main}>{children}</View>
-      {!desktop && !isAuthRoute && !hideMobileNav && settings.showFooter && mobileNav}
+      {!desktop && !isAuthRoute && settings.showFooter && mobileNav}
     </View>
   );
 }

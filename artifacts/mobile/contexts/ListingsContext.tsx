@@ -238,9 +238,8 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
 
   const cancelViewing = useCallback(async (id: string) => {
     if (!supabase) throw new Error("Supabase is not configured. Viewing requests cannot be updated.");
-    const { data, error } = await supabase.from("viewings").update({ status: "cancelled" }).eq("id", id).select("id").maybeSingle();
+    const { error } = await supabase.from("viewings").update({ status: "cancelled" }).eq("id", id);
     if (error) throw new Error(error.message);
-    if (!data) throw new Error("Viewing was not updated. Check your access or refresh the schedule.");
     setViewings((current) => current.map((v) => (v.id === id ? { ...v, status: "cancelled" as const } : v)));
   }, []);
 
@@ -264,9 +263,8 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
 
   const respondToViewing = useCallback(async (id: string, status: "confirmed" | "cancelled") => {
     if (!supabase) throw new Error("Supabase is not configured. Viewing requests cannot be updated.");
-    const { data, error } = await supabase.from("viewings").update({ status }).eq("id", id).select("id").maybeSingle();
+    const { error } = await supabase.from("viewings").update({ status }).eq("id", id);
     if (error) throw new Error(error.message);
-    if (!data) throw new Error("Viewing was not updated. Check your access or refresh the schedule.");
     setViewings((current) => current.map((viewing) => viewing.id === id ? { ...viewing, status } : viewing));
   }, []);
 

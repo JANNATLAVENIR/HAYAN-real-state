@@ -92,7 +92,7 @@ export default function ChatScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Pressable
-            style={({ pressed }) => [styles.convItem, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.convItem, { borderBottomColor: colors.border, opacity: pressed ? 0.9 : 1 }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               router.push(`/conversation/${item.id}`);
@@ -163,21 +163,18 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 16 },
-  chatSearch: { height: 46, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 15, borderWidth: 1, borderRadius: 23, marginHorizontal: 20, marginBottom: 8 },
+  chatSearch: { height: 44, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, borderWidth: 1, borderRadius: 8, marginHorizontal: 20, marginBottom: 8 },
   chatSearchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
-  headerTitle: { fontSize: 23, fontFamily: "Inter_700Bold", letterSpacing: 0.1 },
+  headerTitle: { fontSize: 14, fontFamily: "Inter_600SemiBold", letterSpacing: 3 },
   convItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 13,
-    paddingVertical: 14,
-    marginHorizontal: 16,
-    marginTop: 7,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  avatar: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
-  propertyThumb: { width: 58, height: 58, borderRadius: 14, backgroundColor: "#EAE6DF" },
+  avatar: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
+  propertyThumb: { width: 54, height: 54, borderRadius: 8, backgroundColor: "#EAE6DF" },
   convInfo: { flex: 1, marginLeft: 14 },
   convTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   convName: { fontSize: 15, fontFamily: "Inter_600SemiBold", flex: 1 },

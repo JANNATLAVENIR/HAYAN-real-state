@@ -31,7 +31,6 @@ export function AdminTrustConsole() {
   const [history, setHistory] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.isAdmin || !supabase || !isSupabaseConfigured) return;
@@ -90,16 +89,9 @@ export function AdminTrustConsole() {
   };
 
   const decideVerification = async (request: VerificationRequest, status: "approved" | "rejected") => {
-    if (!supabase) {
-      setLoadError(t("verificationRequired"));
-      return;
-    }
+    if (!supabase) return;
     const { error } = await supabase.from("seller_verification_requests").update({ status, reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq("id", request.id);
-    if (error) {
-      setLoadError(`${t("updateFailed")}: ${error.message}`);
-      return;
-    }
-    setReviewingRequestId(null);
+    if (error) return Alert.alert(t("updateFailed"), error.message);
     setVerificationRequests((current) => current.filter((item) => item.id !== request.id));
     void load();
   };
@@ -140,20 +132,13 @@ export function AdminTrustConsole() {
           <Text style={[styles.cardTitle, { color: colors.foreground }]}>{request.userName}</Text>
           <Text style={[styles.muted, { color: colors.mutedForeground }]}>{request.userEmail}</Text>
           <Text style={[styles.details, { color: colors.foreground }]}>{request.message}</Text>
-          {reviewingRequestId === request.id ? (
-            <>
-              <Text style={[styles.details, { color: colors.mutedForeground }]}>{t("verificationChecklist")}</Text>
-              <View style={styles.actions}>
-                <Pressable onPress={() => setReviewingRequestId(null)}><Text style={[styles.actionText, { color: colors.mutedForeground }]}>{t("cancel")}</Text></Pressable>
-                <Pressable onPress={() => void decideVerification(request, "rejected")}><Text style={[styles.actionText, { color: colors.destructive }]}>{t("rejected")}</Text></Pressable>
-                <Pressable onPress={() => void decideVerification(request, "approved")}><Text style={[styles.actionText, { color: colors.primary }]}>{t("verifiedSeller")}</Text></Pressable>
-              </View>
-            </>
-          ) : (
-            <View style={styles.actions}>
-              <Pressable onPress={() => setReviewingRequestId(request.id)}><Text style={[styles.actionText, { color: colors.primary }]}>{t("reviewing")}</Text></Pressable>
-            </View>
-          )}
+          <View style={styles.actions}>
+            <Pressable onPress={() => Alert.alert(t("verificationRequests"), `${request.message}\n\n${t("verificationChecklist")}`, [
+              { text: t("cancel"), style: "cancel" },
+              { text: t("verifiedSeller"), onPress: () => { void decideVerification(request, "approved"); } },
+              { text: t("rejected"), style: "destructive", onPress: () => { void decideVerification(request, "rejected"); } },
+            ])}><Text style={[styles.actionText, { color: colors.primary }]}>{t("reviewing")}</Text></Pressable>
+          </View>
         </View>
       ))}
 
