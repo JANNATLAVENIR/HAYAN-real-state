@@ -72,7 +72,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 24 : 16), paddingBottom: insets.bottom + 18 }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 24 : 16), paddingBottom: insets.bottom + (Platform.OS === "web" ? 8 : 18) }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
