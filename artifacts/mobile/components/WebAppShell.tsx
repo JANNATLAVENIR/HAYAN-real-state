@@ -80,23 +80,24 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           position: fixed !important;
           left: 0 !important;
           right: 0 !important;
-          bottom: env(safe-area-inset-bottom, 0px) !important;
+          bottom: 0 !important;
           z-index: 1000 !important;
+          height: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
+          min-height: 0 !important;
+          padding: 0 0 env(safe-area-inset-bottom, 0px) !important;
+          box-sizing: border-box !important;
+          background: var(--hayan-app-background, #fcfbf9) !important;
+          display: flex !important;
+          align-items: flex-start !important;
+        }
+        #hayan-mobile-nav-row {
+          flex: 0 0 44px !important;
+          width: 100% !important;
           height: 44px !important;
           min-height: 44px !important;
-          padding: 0 !important;
+          padding: 0 10px !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
-        }
-        #hayan-mobile-nav::after {
-          content: "";
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-bottom, 0px);
-          background: var(--hayan-nav-background, #ffffff);
-          pointer-events: none;
         }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
@@ -224,8 +225,10 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileNav = (
-    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: Platform.OS === "web" ? 44 : settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
-      {mobileItems.map((item) => navItem(item, true))}
+    <View nativeID="hayan-mobile-nav" style={[styles.mobileNavShell, { backgroundColor: colors.background }]}>
+      <View nativeID="hayan-mobile-nav-row" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        {mobileItems.map((item) => navItem(item, true))}
+      </View>
     </View>
   );
 
@@ -284,7 +287,8 @@ const styles = StyleSheet.create({
   signOut: { minHeight: 34, flexDirection: "row", alignItems: "center", gap: 9 },
   accountAction: { fontFamily: "Inter_500Medium", fontSize: 12 },
   main: { flex: 1, minWidth: 0 },
-  mobileNav: { position: "absolute", left: 0, right: 0, bottom: 0, minHeight: 68, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: 10, paddingBottom: 6 },
+  mobileNavShell: { position: "absolute", left: 0, right: 0, bottom: 0 },
+  mobileNav: { minHeight: 44, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
   mobileItem: { flex: 1, minHeight: 42, alignItems: "center", justifyContent: "center", gap: 1, borderRadius: 10 },
   mobileLabel: { fontFamily: "Inter_500Medium", fontSize: 9, letterSpacing: 0.2 },
 });
