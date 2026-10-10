@@ -177,7 +177,7 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.companyCredit, { borderTopColor: colors.border }]}>
+        <View style={[styles.companyCredit, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
           <Image
             source={require("@/assets/images/jannat-lavenir-logo.png")}
             contentFit="contain"
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   bottomSection: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 22 },
   noAccountText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   signUpText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 30, paddingTop: 12, paddingBottom: 6 },
+  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 48, paddingTop: 12, paddingBottom: 6 },
   companyLogo: { width: 24, height: 32 },
   companyCreditLabel: { fontSize: 10, fontFamily: "Inter_400Regular", letterSpacing: 0.5, marginBottom: 3 },
   companyName: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 1.1 },
