@@ -89,6 +89,12 @@ export default function LoginScreen() {
           <Image source={require("@/assets/images/hayan-logo.png")} contentFit="contain" style={styles.brandLogo} accessibilityLabel="HAYÁN Real Estate" />
         </View>
 
+        <View pointerEvents="none" style={styles.brandPromise}>
+          <Text style={[styles.brandPromiseLine, { color: colors.mutedForeground }]}>Better Homes</Text>
+          <Text style={[styles.brandPromiseLine, { color: colors.mutedForeground }]}>Brighter Futures</Text>
+          <View style={[styles.brandPromiseAccent, { backgroundColor: colors.primary }]} />
+        </View>
+
         <View style={styles.formSection}>
           <Text style={[styles.welcomeText, { color: colors.foreground }]}>
             {language === "en" ? <>Welcome <Text style={{ color: colors.primary }}>back</Text></> : t("welcomeBack")}
@@ -202,6 +208,9 @@ const styles = StyleSheet.create({
   brandSection: { alignItems: "center", marginTop: 12, marginBottom: 18 },
   compactBrandSection: { marginTop: 4, marginBottom: 12 },
   brandLogo: { width: 220, height: 166 },
+  brandPromise: { position: "absolute", left: 0, bottom: 82, zIndex: 1 },
+  brandPromiseLine: { fontSize: 11, lineHeight: 16, letterSpacing: 0.5, fontFamily: "Georgia" },
+  brandPromiseAccent: { width: 18, height: 1, marginTop: 8 },
   formSection: { flex: 1 },
   welcomeText: { fontSize: 38, lineHeight: 46, fontFamily: "Georgia", letterSpacing: -0.8 },
   subtitleText: { fontSize: 14, lineHeight: 21, fontFamily: "Inter_400Regular", marginTop: 7, marginBottom: 22 },
@@ -209,10 +218,10 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 13, fontFamily: "Inter_500Medium", flex: 1 },
   infoText: { fontSize: 13, fontFamily: "Inter_500Medium", marginBottom: 16 },
   fieldGroup: { marginBottom: 14 },
-  inputWrapper: { minHeight: 60, flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, gap: 12, backgroundColor: "rgba(255,255,255,0.42)" },
+  inputWrapper: { minHeight: 56, flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, gap: 12, backgroundColor: "rgba(255,255,255,0.42)" },
   textInput: { flex: 1, fontSize: 15, fontFamily: "Georgia" },
   forgotText: { fontSize: 13, fontFamily: "Georgia", textAlign: "right", marginBottom: 24 },
-  loginBtn: { minHeight: 60, paddingHorizontal: 26, borderRadius: 32, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 18, marginBottom: 18 },
+  loginBtn: { minHeight: 56, paddingHorizontal: 26, borderRadius: 32, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 18, marginBottom: 18 },
   loginBtnText: { fontSize: 17, fontFamily: "Georgia" },
   bottomSection: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 22 },
   noAccountText: { fontSize: 14, fontFamily: "Inter_400Regular" },
