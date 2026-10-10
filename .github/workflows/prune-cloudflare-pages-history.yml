@@ -1,0 +1,104 @@
+name: Keep only the live Hayan Pages deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type DELETE_OLD_DEPLOYMENTS to remove every deployment except the live production one
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prune:
+    if: github.ref == 'refs/heads/master' && inputs.confirm == 'DELETE_OLD_DEPLOYMENTS'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep the canonical live deployment and remove history
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: df80ba385b0b668c090cf14077e98e32
+          CLOUDFLARE_PROJECT_NAME: hayan-real-state
+        run: |
+          set -euo pipefail
+
+          api() {
+            local method="$1"
+            local path="$2"
+            curl --fail-with-body --silent --show-error \
+              --request "$method" \
+              "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${CLOUDFLARE_PROJECT_NAME}${path}" \
+              --header "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              --header "Content-Type: application/json"
+          }
+
+          project="$(api GET "")"
+          jq -e '.success == true and .result.name == "hayan-real-state"' <<<"$project" >/dev/null
+
+          production_branch="$(jq -r '.result.production_branch // .result.source.config.production_branch // empty' <<<"$project")"
+          live_id="$(jq -r '.result.canonical_deployment.id // empty' <<<"$project")"
+          live_environment="$(jq -r '.result.canonical_deployment.environment // empty' <<<"$project")"
+          live_status="$(jq -r '.result.canonical_deployment.latest_stage.status // empty' <<<"$project")"
+
+          if [[ "$production_branch" != "master" || -z "$live_id" || "$live_environment" != "production" || "$live_status" != "success" ]]; then
+            echo "Refusing cleanup: production branch or live deployment could not be confirmed."
+            exit 1
+          fi
+
+          deployments_file="$(mktemp)"
+          trap 'rm -f "$deployments_file"' EXIT
+          : >"$deployments_file"
+
+          for environment in production preview; do
+            page=1
+            while true; do
+              response="$(api GET "/deployments?env=${environment}&page=${page}&per_page=100")"
+              jq -e '.success == true' <<<"$response" >/dev/null
+              jq -c '.result[]' <<<"$response" >>"$deployments_file"
+
+              total_pages="$(jq -r '.result_info.total_pages // empty' <<<"$response")"
+              count="$(jq '.result | length' <<<"$response")"
+              if [[ -n "$total_pages" && "$page" -ge "$total_pages" ]] || [[ "$count" -lt 100 ]]; then
+                break
+              fi
+              page=$((page + 1))
+            done
+          done
+
+          live_count="$(jq -s --arg id "$live_id" '[.[] | select(.id == $id and .environment == "production")] | length' "$deployments_file")"
+          if [[ "$live_count" != "1" ]]; then
+            echo "Refusing cleanup: canonical live deployment was not uniquely present in the deployment list."
+            exit 1
+          fi
+
+          active_count="$(jq -s '[.[] | select(.latest_stage.status == "active" or (.latest_stage.name == "queued" and .latest_stage.status == "idle"))] | length' "$deployments_file")"
+          if [[ "$active_count" != "0" ]]; then
+            echo "Refusing cleanup: another deployment is still active or queued."
+            exit 1
+          fi
+
+          deleted=0
+          while IFS=$'\t' read -r deployment_id environment; do
+            [[ -n "$deployment_id" ]] || continue
+            [[ "$deployment_id" == "$live_id" ]] && continue
+
+            force=""
+            if [[ "$environment" == "preview" ]]; then
+              force="?force=true"
+            fi
+            result="$(api DELETE "/deployments/${deployment_id}${force}")"
+            jq -e '.success == true' <<<"$result" >/dev/null
+            deleted=$((deleted + 1))
+          done < <(jq -r --arg live "$live_id" '.id as $id | select($id != $live) | [.id, .environment] | @tsv' "$deployments_file")
+
+          remaining="$(api GET "/deployments?env=production&page=1&per_page=100")"
+          jq -e '.success == true and (.result | length == 1)' <<<"$remaining" >/dev/null
+          jq -e --arg id "$live_id" '.result[0].id == $id' <<<"$remaining" >/dev/null
+
+          remaining_previews="$(api GET "/deployments?env=preview&page=1&per_page=100")"
+          jq -e '.success == true and (.result | length == 0)' <<<"$remaining_previews" >/dev/null
+
+          echo "Removed ${deleted} old deployment(s); the verified live production deployment remains."
