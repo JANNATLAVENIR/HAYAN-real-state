@@ -89,10 +89,27 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const confirmDeleteProperty = (propertyId: string) => Alert.alert(t("deleteMyListing"), t("deleteListingWarning"), [
-    { text: t("cancel"), style: "cancel" },
-    { text: t("delete"), style: "destructive", onPress: () => { void deleteProperty(propertyId).catch((error: unknown) => Alert.alert(t("deleteFailed"), error instanceof Error ? error.message : t("tryAgain"))); } },
-  ]);
+  const runDeleteProperty = (propertyId: string) => {
+    void deleteProperty(propertyId).catch((error: unknown) => {
+      const title = t("deleteFailed");
+      const message = error instanceof Error ? error.message : t("tryAgain");
+      if (Platform.OS === "web") window.alert(`${title}\n\n${message}`);
+      else Alert.alert(title, message);
+    });
+  };
+
+  const confirmDeleteProperty = (propertyId: string) => {
+    const title = t("deleteMyListing");
+    const message = t("deleteListingWarning");
+    if (Platform.OS === "web") {
+      if (window.confirm(`${title}\n\n${message}`)) runDeleteProperty(propertyId);
+      return;
+    }
+    Alert.alert(title, message, [
+      { text: t("cancel"), style: "cancel" },
+      { text: t("delete"), style: "destructive", onPress: () => runDeleteProperty(propertyId) },
+    ]);
+  };
 
   const menuItems: ProfileMenuItem[] = [
     { icon: "log-in", label: t("signIn"), onPress: () => router.push("/(auth)/login"), show: !user },

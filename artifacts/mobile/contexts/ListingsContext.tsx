@@ -206,8 +206,9 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProperty = useCallback(async (id: string) => {
     if (!supabase) throw new Error("Supabase is not configured. Property data cannot be deleted.");
-    const { error } = await supabase.from("properties").delete().eq("id", id);
+    const { data, error } = await supabase.from("properties").delete().eq("id", id).select("id").maybeSingle();
     if (error) throw new Error(error.message);
+    if (!data) throw new Error("The listing was not deleted. It may no longer exist or you may not have permission.");
     setProperties((current) => current.filter((p) => p.id !== id));
   }, []);
 

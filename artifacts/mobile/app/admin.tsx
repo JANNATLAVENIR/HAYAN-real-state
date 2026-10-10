@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -100,6 +100,12 @@ export default function AdminScreen() {
 
   const deleteListing = async (id: string) => {
     if (!supabase) return;
+    const title = t("deleteListingPrompt");
+    const message = t("deleteListingWarning");
+    if (Platform.OS === "web") {
+      if (window.confirm(`${title}\n\n${message}`)) void confirmDeleteListing(id);
+      return;
+    }
     Alert.alert(t("deleteListingPrompt"), t("deleteListingWarning"), [
       { text: t("cancel"), style: "cancel" },
       { text: t("delete"), style: "destructive", onPress: () => { void confirmDeleteListing(id); } },
@@ -108,8 +114,19 @@ export default function AdminScreen() {
 
   const confirmDeleteListing = async (id: string) => {
     if (!supabase) return;
-    const { error } = await supabase.from("properties").delete().eq("id", id);
-    if (error) return Alert.alert(t("deleteFailed"), error.message);
+    const { data, error } = await supabase.from("properties").delete().eq("id", id).select("id").maybeSingle();
+    if (error) {
+      const message = error.message;
+      if (Platform.OS === "web") window.alert(`${t("deleteFailed")}\n\n${message}`);
+      else Alert.alert(t("deleteFailed"), message);
+      return;
+    }
+    if (!data) {
+      const message = "The listing was not deleted. It may no longer exist or you may not have permission.";
+      if (Platform.OS === "web") window.alert(`${t("deleteFailed")}\n\n${message}`);
+      else Alert.alert(t("deleteFailed"), message);
+      return;
+    }
     setListings((current) => current.filter((property) => property.id !== id));
   };
 

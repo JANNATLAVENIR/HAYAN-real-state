@@ -82,8 +82,8 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           right: 0 !important;
           bottom: env(safe-area-inset-bottom, 0px) !important;
           z-index: 1000 !important;
-          height: 52px !important;
-          min-height: 52px !important;
+          height: 46px !important;
+          min-height: 46px !important;
           padding: 0 !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
@@ -224,7 +224,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileNav = (
-    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: Platform.OS === "web" ? 52 : settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
+    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: Platform.OS === "web" ? 46 : settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
       {mobileItems.map((item) => navItem(item, true))}
     </View>
   );
@@ -285,6 +285,6 @@ const styles = StyleSheet.create({
   accountAction: { fontFamily: "Inter_500Medium", fontSize: 12 },
   main: { flex: 1, minWidth: 0 },
   mobileNav: { position: "absolute", left: 0, right: 0, bottom: 0, minHeight: 68, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: 10, paddingBottom: 6 },
-  mobileItem: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 10 },
+  mobileItem: { flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", gap: 2, borderRadius: 10 },
   mobileLabel: { fontFamily: "Inter_500Medium", fontSize: 9, letterSpacing: 0.2 },
 });
