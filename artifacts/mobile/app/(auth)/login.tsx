@@ -72,7 +72,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 24 : 16), paddingBottom: insets.bottom + (Platform.OS === "web" ? 8 : 18) }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + (Platform.OS === "web" ? 24 : 16), paddingBottom: insets.bottom + (Platform.OS === "web" ? 0 : 18) }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   bottomSection: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 22 },
   noAccountText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   signUpText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 22, paddingTop: 12, paddingBottom: 6 },
+  companyCredit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 30, paddingTop: 12, paddingBottom: 6 },
   companyLogo: { width: 24, height: 32 },
   companyCreditLabel: { fontSize: 10, fontFamily: "Inter_400Regular", letterSpacing: 0.5, marginBottom: 3 },
   companyName: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 1.1 },
