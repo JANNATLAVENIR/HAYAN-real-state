@@ -153,7 +153,7 @@ export default function ChatScreen() {
             {!isLoading && !loadError && !searchQuery ? <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t("startConversation")}</Text> : null}
           </View>
         }
-        contentContainerStyle={{ paddingBottom: insets.bottom + (Platform.OS === "web" ? 84 : 100) }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? Math.max(insets.bottom + 84, 108) : insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
       />
     </View>
