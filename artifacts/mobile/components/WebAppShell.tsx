@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { usePathname, useRouter, useSegments } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +20,57 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined" || typeof window === "undefined") return;
+
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    const previousViewport = viewportMeta?.getAttribute("content");
+    const viewportContent = "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+    if (viewportMeta) viewportMeta.setAttribute("content", viewportContent);
+
+    const setMeta = (name: string, content: string) => {
+      let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = name;
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+    setMeta("apple-mobile-web-app-capable", "yes");
+    setMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
+    setMeta("apple-mobile-web-app-title", "HAYAN Real Estate");
+
+    let manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    if (!manifestLink) {
+      manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "/manifest.webmanifest";
+      document.head.appendChild(manifestLink);
+    }
+
+    const chatFocusStyle = document.createElement("style");
+    chatFocusStyle.textContent = "#chat-message-input:focus { outline: none !important; box-shadow: none !important; }";
+    document.head.appendChild(chatFocusStyle);
+
+    const preventGestureZoom = (event: Event) => event.preventDefault();
+    const preventPinchZoom = (event: TouchEvent) => {
+      if (event.touches.length > 1) event.preventDefault();
+    };
+    document.addEventListener("gesturestart", preventGestureZoom, { passive: false });
+    document.addEventListener("gesturechange", preventGestureZoom, { passive: false });
+    document.addEventListener("touchmove", preventPinchZoom, { passive: false });
+
+    return () => {
+      document.removeEventListener("gesturestart", preventGestureZoom);
+      document.removeEventListener("gesturechange", preventGestureZoom);
+      document.removeEventListener("touchmove", preventPinchZoom);
+      chatFocusStyle.remove();
+      if (viewportMeta && previousViewport) viewportMeta.setAttribute("content", previousViewport);
+    };
+  }, []);
+
   const desktop = Platform.OS === "web" && width >= 1000;
   const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
   const hideMobileNav = segments[0] !== "(tabs)";

@@ -22,9 +22,9 @@ export default function ConversationScreen() {
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const { messages, getConversation, loadConversationMessages, receiveRealtimeMessage, sendMessage, markAsRead, isLoading, loadError, reload } = useChat();
-  const webTopPad = Platform.OS === "web" ? 67 : 0;
-
   const [text, setText] = useState("");
+  const [composerFocused, setComposerFocused] = useState(false);
+  const [webViewport, setWebViewport] = useState<{ height: number; offsetTop: number } | null>(null);
   const [sendError, setSendError] = useState("");
   const [sending, setSending] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -32,6 +32,27 @@ export default function ConversationScreen() {
   const chatMessages = messages[id] || [];
   const otherParticipantId = conversation?.participants.find((participantId) => participantId !== user?.id);
   const otherParticipantAvatar = otherParticipantId ? conversation?.participantAvatars?.[otherParticipantId] : undefined;
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || !composerFocused || typeof window === "undefined") {
+      setWebViewport(null);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateViewport = () => setWebViewport({ height: viewport.height, offsetTop: viewport.offsetTop });
+    updateViewport();
+    viewport.addEventListener("resize", updateViewport);
+    viewport.addEventListener("scroll", updateViewport);
+    window.addEventListener("resize", updateViewport);
+    return () => {
+      viewport.removeEventListener("resize", updateViewport);
+      viewport.removeEventListener("scroll", updateViewport);
+      window.removeEventListener("resize", updateViewport);
+    };
+  }, [composerFocused]);
 
   useEffect(() => {
     if (!id || !user || isLoading || !conversation) return;
@@ -103,9 +124,23 @@ export default function ConversationScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={0}>
+    <KeyboardAvoidingView
+      style={[
+        styles.container,
+        webViewport && {
+          position: "absolute",
+          top: webViewport.offsetTop,
+          left: 0,
+          right: 0,
+          flex: 0,
+          height: webViewport.height,
+        },
+      ]}
+      behavior={Platform.OS === "web" ? undefined : "padding"}
+      keyboardVerticalOffset={0}
+    >
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: insets.top + webTopPad + 8, borderBottomColor: colors.border }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 8, borderBottomColor: colors.border }]}>
           <Pressable accessibilityRole="button" accessibilityLabel={t("messages")} onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/chat")} hitSlop={12}>
             <Feather name="arrow-left" size={24} color={colors.foreground} />
           </Pressable>
@@ -189,14 +224,17 @@ export default function ConversationScreen() {
             {t("messageSendFailed")}: {sendError}
           </Text>
         ) : null}
-        <View style={[styles.inputBar, { borderTopColor: colors.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8) }]}>
+        <View style={[styles.inputBar, { borderTopColor: colors.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? (composerFocused ? 0 : 34) : 8) }]}>
           <View style={[styles.inputWrapper, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 }]}>
             <TextInput
-              style={[styles.textInput, { color: colors.foreground }]}
+              nativeID="chat-message-input"
+              style={[styles.textInput, Platform.OS === "web" && styles.webTextInput, { color: colors.foreground }]}
               placeholder={t("typeMessage")}
               placeholderTextColor={colors.mutedForeground}
               value={text}
               onChangeText={setText}
+              onFocus={() => setComposerFocused(true)}
+              onBlur={() => setComposerFocused(false)}
               multiline
               maxLength={500}
             />
@@ -253,5 +291,6 @@ const styles = StyleSheet.create({
   },
   inputWrapper: { flex: 1, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 100 },
   textInput: { fontSize: 15, fontFamily: "Inter_400Regular", maxHeight: 80 },
+  webTextInput: { fontSize: 16 },
   sendBtn: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
 });
