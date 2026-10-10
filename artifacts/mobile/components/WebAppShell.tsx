@@ -81,6 +81,16 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
           box-sizing: border-box !important;
         }
+        #hayan-safe-area-fill {
+          position: fixed !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          height: env(safe-area-inset-bottom, 0px) !important;
+          background-color: var(--hayan-safe-area-background, var(--hayan-app-background, #fff)) !important;
+          pointer-events: none !important;
+          z-index: 2147483647 !important;
+        }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
       #hayan-chat-screen {
@@ -121,6 +131,9 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       }
     `;
     document.head.appendChild(chatFocusStyle);
+    const safeAreaFill = document.createElement("div");
+    safeAreaFill.id = "hayan-safe-area-fill";
+    document.body.appendChild(safeAreaFill);
 
     const preventGestureZoom = (event: Event) => event.preventDefault();
     const preventPinchZoom = (event: TouchEvent) => {
@@ -135,19 +148,22 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       document.removeEventListener("gesturechange", preventGestureZoom);
       document.removeEventListener("touchmove", preventPinchZoom);
       chatFocusStyle.remove();
+      safeAreaFill.remove();
       if (viewportMeta && previousViewport) viewportMeta.setAttribute("content", previousViewport);
     };
   }, []);
 
-  useEffect(() => {
-    if (Platform.OS !== "web" || typeof document === "undefined") return;
-    document.documentElement.style.setProperty("--hayan-app-background", colors.background);
-    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${settings.navHeight}px`);
-  }, [colors.background, settings.navHeight]);
-
   const desktop = Platform.OS === "web" && width >= 1000;
   const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
   const hideMobileNav = segments[0] !== "(tabs)";
+  const showMobileFooter = !desktop && !isAuthRoute && !hideMobileNav && settings.showFooter;
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    document.documentElement.style.setProperty("--hayan-app-background", colors.background);
+    document.documentElement.style.setProperty("--hayan-safe-area-background", showMobileFooter ? colors.card : colors.background);
+    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${settings.navHeight}px`);
+  }, [colors.background, colors.card, settings.navHeight, showMobileFooter]);
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
@@ -228,7 +244,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         </View>
       ) : null}
       <View style={styles.main}>{children}</View>
-      {!desktop && !isAuthRoute && !hideMobileNav && settings.showFooter && mobileNav}
+      {showMobileFooter && mobileNav}
     </View>
   );
 }
