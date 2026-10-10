@@ -96,7 +96,7 @@ export default function ProfileScreen() {
 
   const menuItems: ProfileMenuItem[] = [
     { icon: "log-in", label: t("signIn"), onPress: () => router.push("/(auth)/login"), show: !user },
-    { icon: "shield", label: t("masterAdmin"), onPress: () => router.push("/admin"), show: user?.isAdmin },
+    { icon: "shield", label: t("masterAdmin"), onPress: () => router.push("/admin"), show: Boolean(user?.isAdmin) },
     { icon: "user", label: t("publicProfile"), onPress: () => { if (user) router.push({ pathname: "/user/[id]", params: { id: user.id } }); }, show: Boolean(user) },
     { icon: "edit-3", label: t("editProfile"), onPress: () => router.push("/edit-profile"), show: Boolean(user) },
     { icon: "lock", label: t("changePassword"), onPress: () => router.push("/change-password"), show: Boolean(user) },

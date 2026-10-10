@@ -1,31 +1,3 @@
-create or replace function public.notify_message_recipients()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  linked_property_id uuid;
-begin
-  select property_id into linked_property_id
-  from public.conversations
-  where id = new.conversation_id;
-
-  insert into public.alerts (user_id, type, title, body, property_id)
-  select member.user_id, 'message', 'New message', left(new.text, 160), linked_property_id
-  from public.conversation_members member
-  where member.conversation_id = new.conversation_id
-    and member.user_id <> new.sender_id;
-
-  return new;
-end;
-$$;
-
-drop trigger if exists notify_message_recipients on public.messages;
-create trigger notify_message_recipients
-  after insert on public.messages
-  for each row execute function public.notify_message_recipients();
-
 create or replace function public.notify_viewing_status()
 returns trigger
 language plpgsql

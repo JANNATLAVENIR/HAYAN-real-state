@@ -9,6 +9,7 @@ import type { ScheduledViewing } from "@/constants/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useListings } from "@/contexts/ListingsContext";
+import { useBranding } from "@/contexts/BrandingContext";
 import { useColors } from "@/hooks/useColors";
 
 type ViewingFilter = "all" | "pending" | "confirmed" | "past";
@@ -35,10 +36,14 @@ export default function ViewingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { language, t } = useLanguage();
+  const { settings } = useBranding();
   const { viewings, isLoading, refreshListings, cancelViewing, respondToViewing, rescheduleViewing } = useListings();
   const [filter, setFilter] = useState<ViewingFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   const [rescheduling, setRescheduling] = useState<ScheduledViewing | null>(null);
+  const [statusChange, setStatusChange] = useState<{ item: ScheduledViewing; status: "confirmed" | "cancelled" } | null>(null);
+  const [statusChangeError, setStatusChangeError] = useState("");
+  const [savingStatus, setSavingStatus] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const locale = language === "so" ? "so-SO" : "en-US";
@@ -58,19 +63,23 @@ export default function ViewingsScreen() {
   }, [viewings, user?.id, filter]);
 
   const updateStatus = (item: ScheduledViewing, status: "confirmed" | "cancelled") => {
-    const title = status === "confirmed" ? t("confirmViewing") : t("cancelViewing");
-    const body = status === "confirmed" ? t("confirmViewingPrompt") : t("cancelViewingPrompt");
-    Alert.alert(title, body, [
-      { text: t("keepViewing"), style: "cancel" },
-      {
-        text: title,
-        style: status === "cancelled" ? "destructive" : "default",
-        onPress: () => {
-          const action = status === "cancelled" ? cancelViewing(item.id) : respondToViewing(item.id, status);
-          void action.catch((error: unknown) => Alert.alert(t("couldNotSchedule"), error instanceof Error ? error.message : t("tryAgain")));
-        },
-      },
-    ]);
+    setStatusChangeError("");
+    setStatusChange({ item, status });
+  };
+
+  const confirmStatusChange = async () => {
+    if (!statusChange) return;
+    setSavingStatus(true);
+    setStatusChangeError("");
+    try {
+      if (statusChange.status === "cancelled") await cancelViewing(statusChange.item.id);
+      else await respondToViewing(statusChange.item.id, statusChange.status);
+      setStatusChange(null);
+    } catch (error) {
+      setStatusChangeError(error instanceof Error ? error.message : t("tryAgain"));
+    } finally {
+      setSavingStatus(false);
+    }
   };
 
   const onRefresh = async () => {
@@ -153,7 +162,9 @@ export default function ViewingsScreen() {
         <ActivityIndicator color={colors.primary} style={styles.loading} />
       ) : (
         <ScrollView
-          contentContainerStyle={[styles.list, visibleViewings.length === 0 && styles.emptyList, { paddingBottom: insets.bottom + 36 }]}
+          contentContainerStyle={[styles.list, visibleViewings.length === 0 && styles.emptyList, {
+            paddingBottom: insets.bottom + (Platform.OS === "web" && settings.showFooter ? settings.navHeight + settings.footerHeight / 4 + 24 : 36),
+          }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.primary} />}
           showsVerticalScrollIndicator={false}
         >
@@ -226,6 +237,30 @@ export default function ViewingsScreen() {
             <View style={styles.modalActions}>
               <Pressable onPress={() => setRescheduling(null)} style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}><Text style={[styles.actionText, { color: colors.foreground }]}>{t("cancel")}</Text></Pressable>
               <Pressable onPress={() => void saveReschedule()} style={[styles.actionButton, { backgroundColor: colors.primary }]}><Text style={[styles.actionText, { color: colors.primaryForeground }]}>{t("update")}</Text></Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal visible={Boolean(statusChange)} transparent animationType="fade" onRequestClose={() => setStatusChange(null)}>
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.foreground }]}>
+              {statusChange?.status === "confirmed" ? t("confirmViewing") : t("cancelViewing")}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+              {statusChange?.status === "confirmed" ? t("confirmViewingPrompt") : t("cancelViewingPrompt")}
+            </Text>
+            {statusChangeError ? <Text style={[styles.subtitle, { color: colors.destructive }]}>{statusChangeError}</Text> : null}
+            <View style={styles.modalActions}>
+              <Pressable disabled={savingStatus} onPress={() => setStatusChange(null)} style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}>
+                <Text style={[styles.actionText, { color: colors.foreground }]}>{t("keepViewing")}</Text>
+              </Pressable>
+              <Pressable disabled={savingStatus} onPress={() => void confirmStatusChange()} style={[styles.actionButton, { backgroundColor: statusChange?.status === "cancelled" ? colors.destructive : colors.primary }]}>
+                {savingStatus ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : null}
+                <Text style={[styles.actionText, { color: colors.primaryForeground }]}>
+                  {statusChange?.status === "confirmed" ? t("confirmViewing") : t("cancelViewing")}
+                </Text>
+              </Pressable>
             </View>
           </View>
         </View>

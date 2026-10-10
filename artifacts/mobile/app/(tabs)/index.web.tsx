@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 
 import { FilterSheet } from "@/components/FilterSheet";
@@ -89,6 +90,17 @@ export default function WebDiscoveryScreen() {
           </View>
         </View>
 
+        {width < 760 && !query && Object.keys(filters).length === 0 ? (
+          <View style={styles.mobileBanner}>
+            <Image source={require("@/assets/images/hero-property.png")} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <View style={styles.mobileBannerShade} />
+            <View style={styles.mobileBannerContent}>
+              <Text style={styles.mobileBannerEyebrow}>HAYAN REAL ESTATE</Text>
+              <Text style={styles.mobileBannerTitle}>Find your{"\n"}dream property</Text>
+              <Text style={styles.mobileBannerCaption}>Homes · Land · Apartments · Commercial</Text>
+            </View>
+          </View>
+        ) : null}
         {loadError && <Pressable onPress={() => void refreshListings()} style={[styles.notice, { backgroundColor: colors.card }]}><Feather name="wifi-off" size={17} color={colors.primary} /><Text style={[styles.noticeText, { color: colors.foreground }]}>{t("refreshError")} · {t("tryAgain")}</Text></Pressable>}
         <View style={styles.resultsHeader}>
           <View><Text style={[styles.resultsTitle, { color: colors.foreground }]}>{query ? t("results") : t("latestListings")}</Text><Text style={[styles.resultsCount, { color: colors.mutedForeground }]}>{filteredProperties.length} {t("properties")}</Text></View>
@@ -133,6 +145,12 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, minWidth: 0, fontSize: 15, fontFamily: "Inter_400Regular", outlineStyle: "none" as never },
   quickActions: { flexDirection: "row", alignItems: "center", gap: 9, marginTop: 12, flexWrap: "wrap" },
   quickButton: { borderWidth: 1, borderRadius: 18, paddingHorizontal: 15, paddingVertical: 8 },
+  mobileBanner: { height: 156, borderRadius: 22, overflow: "hidden", justifyContent: "flex-end", marginBottom: 24, backgroundColor: "#AAA" },
+  mobileBannerShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,14,17,0.32)" },
+  mobileBannerContent: { padding: 18, gap: 5 },
+  mobileBannerEyebrow: { color: "#F1D9A5", fontFamily: "Inter_600SemiBold", fontSize: 9, letterSpacing: 2 },
+  mobileBannerTitle: { color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 24, lineHeight: 27 },
+  mobileBannerCaption: { color: "rgba(255,255,255,0.88)", fontFamily: "Inter_500Medium", fontSize: 10 },
   quickText: { fontFamily: "Inter_500Medium", fontSize: 12 },
   clearButton: { paddingHorizontal: 12, paddingVertical: 8 },
   clearText: { fontFamily: "Inter_600SemiBold", fontSize: 12 },
