@@ -106,7 +106,7 @@ export default function ConversationScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={0}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { paddingTop: insets.top + webTopPad + 8, borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t("messages")} onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/chat")} hitSlop={12}>
             <Feather name="arrow-left" size={24} color={colors.foreground} />
           </Pressable>
           {otherParticipantAvatar ? (

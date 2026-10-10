@@ -119,6 +119,10 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.profileHeader, { paddingTop: insets.top + webTopPad + 16 }]}>
+        <View pointerEvents="none" style={styles.profileCover}>
+          <Image source={require("@/assets/images/welcome-house-reference.png")} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <View style={styles.profileCoverShade} />
+        </View>
         {user?.avatar ? (
           <Image source={{ uri: user.avatar }} style={[styles.avatarLarge, { borderColor: colors.primary }]} contentFit="cover" />
         ) : (
@@ -178,7 +182,7 @@ export default function ProfileScreen() {
         {menuItems.filter((m) => m.show !== false).map((item, i) => (
           <Pressable
             key={i}
-            style={({ pressed }) => [styles.menuItem, { borderBottomColor: colors.border, opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.menuItem, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.9 : 1 }]}
             onPress={item.onPress}
           >
             <View style={[styles.menuIcon, { backgroundColor: item.destructive ? "rgba(196,91,91,0.1)" : colors.secondary }]}>
@@ -292,7 +296,9 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  profileHeader: { alignItems: "center", paddingHorizontal: 20, paddingBottom: 24 },
+  profileHeader: { alignItems: "center", paddingHorizontal: 20, paddingBottom: 24, position: "relative" },
+  profileCover: { position: "absolute", top: 0, left: 0, right: 0, height: 190, overflow: "hidden" },
+  profileCoverShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(250,248,245,0.56)" },
   avatarLarge: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 28, fontFamily: "Inter_700Bold" },
   verifiedLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", marginTop: 8 },
@@ -309,8 +315,8 @@ const styles = StyleSheet.create({
   statNum: { fontSize: 22, fontFamily: "Inter_700Bold" },
   statLabel: { fontSize: 11, fontFamily: "Inter_500Medium", marginTop: 2, letterSpacing: 0.5 },
   statDivider: { width: 1, height: 32 },
-  menuSection: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: 8 },
-  menuItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  menuSection: { marginTop: 8, paddingBottom: 8 },
+  menuItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderWidth: StyleSheet.hairlineWidth, borderRadius: 17, marginHorizontal: 16, marginTop: 8 },
   menuIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   menuInfo: { flex: 1, marginLeft: 14 },
   menuLabel: { fontSize: 15, fontFamily: "Inter_500Medium" },

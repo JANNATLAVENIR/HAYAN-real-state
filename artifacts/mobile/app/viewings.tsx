@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ScheduledViewing } from "@/constants/types";
@@ -34,6 +34,7 @@ export default function ViewingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const { user } = useAuth();
   const { language, t } = useLanguage();
   const { settings } = useBranding();
@@ -47,6 +48,7 @@ export default function ViewingsScreen() {
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const locale = language === "so" ? "so-SO" : "en-US";
+  const compact = width < 520;
 
   const visibleViewings = useMemo(() => {
     const mine = viewings.filter((item) => item.userId === user?.id || item.agentId === user?.id);
@@ -179,7 +181,7 @@ export default function ViewingsScreen() {
             const past = isPastViewing(item);
             const statusColor = item.status === "confirmed" ? "#2D8A62" : item.status === "pending" ? colors.primary : colors.mutedForeground;
             return (
-              <View key={item.id} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius }]}>
+              <View key={item.id} style={[styles.card, compact && styles.compactCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 20 }]}>
                 <View style={styles.cardTop}>
                   <View style={[styles.dateIcon, { backgroundColor: colors.background }]}>
                     <Feather name="calendar" size={17} color={colors.primary} />
@@ -188,16 +190,26 @@ export default function ViewingsScreen() {
                     <Text style={[styles.propertyTitle, { color: colors.foreground }]} numberOfLines={2}>{item.propertyTitle}</Text>
                     <Text style={[styles.roleLabel, { color: colors.mutedForeground }]}>{incoming ? t("incomingViewing") : t("yourViewingRequest")}</Text>
                   </View>
-                  <View style={[styles.statusPill, { backgroundColor: `${statusColor}18` }]}>
+                  {!compact ? <View style={[styles.statusPill, { backgroundColor: `${statusColor}18` }]}>
                     <Text style={[styles.statusText, { color: statusColor }]}>{item.status === "pending" ? t("pending") : item.status === "confirmed" ? t("confirmedStatus") : t("cancelledStatus")}</Text>
-                  </View>
+                  </View> : null}
                 </View>
 
+                {compact ? (
+                  <View style={[styles.statusPill, styles.compactStatus, { backgroundColor: `${statusColor}18` }]}>
+                    <Text style={[styles.statusText, { color: statusColor }]}>{item.status === "pending" ? t("pending") : item.status === "confirmed" ? t("confirmedStatus") : t("cancelledStatus")}</Text>
+                  </View>
+                ) : null}
+
                 <View style={[styles.dateTime, { borderTopColor: colors.border }]}>
-                  <Feather name="calendar" size={15} color={colors.mutedForeground} />
-                  <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingDate(item.date, locale)}</Text>
-                  <Feather name="clock" size={15} color={colors.mutedForeground} />
-                  <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingTime(item.time, locale)}</Text>
+                  <View style={[styles.dateItem, compact && styles.compactDateItem]}>
+                    <Feather name="calendar" size={15} color={colors.mutedForeground} />
+                    <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingDate(item.date, locale)}</Text>
+                  </View>
+                  <View style={[styles.dateItem, compact && styles.compactDateItem]}>
+                    <Feather name="clock" size={15} color={colors.mutedForeground} />
+                    <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingTime(item.time, locale)}</Text>
+                  </View>
                 </View>
 
                 {incoming && item.requesterName ? (
@@ -205,18 +217,18 @@ export default function ViewingsScreen() {
                 ) : null}
 
                 {!past && item.status !== "cancelled" ? (
-                  <View style={[styles.actions, { borderTopColor: colors.border }]}>
+                  <View style={[styles.actions, compact && styles.compactActions, { borderTopColor: colors.border }]}>
                     {incoming && item.status === "pending" ? (
-                      <Pressable style={[styles.actionButton, { backgroundColor: colors.primary, borderRadius: colors.radius }]} onPress={() => updateStatus(item, "confirmed")}>
+                      <Pressable style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: colors.foreground, borderRadius: 24 }]} onPress={() => updateStatus(item, "confirmed")}>
                         <Feather name="check" size={16} color={colors.primaryForeground} />
-                        <Text style={[styles.actionText, { color: colors.primaryForeground }]}>{t("confirm")}</Text>
+                        <Text style={[styles.actionText, { color: colors.background }]}>{t("confirm")}</Text>
                       </Pressable>
                     ) : null}
-                    <Pressable style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1, borderRadius: colors.radius }]} onPress={() => updateStatus(item, "cancelled")}>
+                    <Pressable style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1, borderRadius: 24 }]} onPress={() => updateStatus(item, "cancelled")}>
                       <Feather name="x" size={16} color={colors.destructive} />
                       <Text style={[styles.actionText, { color: colors.destructive }]}>{t("cancelViewing")}</Text>
                     </Pressable>
-                    <Pressable style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1, borderRadius: colors.radius }]} onPress={() => openReschedule(item)}>
+                    <Pressable style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1, borderRadius: 24 }]} onPress={() => openReschedule(item)}>
                       <Feather name="clock" size={15} color={colors.primary} />
                       <Text style={[styles.actionText, { color: colors.primary }]}>{t("rescheduleViewing")}</Text>
                     </Pressable>
@@ -234,9 +246,9 @@ export default function ViewingsScreen() {
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("rescheduleHelp")}</Text>
             <TextInput value={newDate} onChangeText={setNewDate} placeholder={t("newViewingDate")} placeholderTextColor={colors.mutedForeground} style={[styles.rescheduleInput, { color: colors.foreground, borderColor: colors.border }]} autoCapitalize="none" />
             <TextInput value={newTime} onChangeText={setNewTime} placeholder={t("newViewingTime")} placeholderTextColor={colors.mutedForeground} style={[styles.rescheduleInput, { color: colors.foreground, borderColor: colors.border }]} keyboardType="numbers-and-punctuation" autoCapitalize="none" />
-            <View style={styles.modalActions}>
-              <Pressable onPress={() => setRescheduling(null)} style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}><Text style={[styles.actionText, { color: colors.foreground }]}>{t("cancel")}</Text></Pressable>
-              <Pressable onPress={() => void saveReschedule()} style={[styles.actionButton, { backgroundColor: colors.primary }]}><Text style={[styles.actionText, { color: colors.primaryForeground }]}>{t("update")}</Text></Pressable>
+            <View style={[styles.modalActions, compact && styles.compactModalActions]}>
+              <Pressable onPress={() => setRescheduling(null)} style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}><Text style={[styles.actionText, { color: colors.foreground }]}>{t("cancel")}</Text></Pressable>
+              <Pressable onPress={() => void saveReschedule()} style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: colors.foreground, borderRadius: 24 }]}><Text style={[styles.actionText, { color: colors.background }]}>{t("update")}</Text></Pressable>
             </View>
           </View>
         </View>
@@ -251,11 +263,11 @@ export default function ViewingsScreen() {
               {statusChange?.status === "confirmed" ? t("confirmViewingPrompt") : t("cancelViewingPrompt")}
             </Text>
             {statusChangeError ? <Text style={[styles.subtitle, { color: colors.destructive }]}>{statusChangeError}</Text> : null}
-            <View style={styles.modalActions}>
-              <Pressable disabled={savingStatus} onPress={() => setStatusChange(null)} style={[styles.actionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}>
+            <View style={[styles.modalActions, compact && styles.compactModalActions]}>
+              <Pressable disabled={savingStatus} onPress={() => setStatusChange(null)} style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: colors.background, borderColor: colors.border, borderWidth: 1 }]}>
                 <Text style={[styles.actionText, { color: colors.foreground }]}>{t("keepViewing")}</Text>
               </Pressable>
-              <Pressable disabled={savingStatus} onPress={() => void confirmStatusChange()} style={[styles.actionButton, { backgroundColor: statusChange?.status === "cancelled" ? colors.destructive : colors.primary }]}>
+              <Pressable disabled={savingStatus} onPress={() => void confirmStatusChange()} style={[styles.actionButton, compact && styles.compactActionButton, { backgroundColor: statusChange?.status === "cancelled" ? colors.destructive : colors.foreground, borderRadius: 24 }]}>
                 {savingStatus ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : null}
                 <Text style={[styles.actionText, { color: colors.primaryForeground }]}>
                   {statusChange?.status === "confirmed" ? t("confirmViewing") : t("cancelViewing")}
@@ -286,7 +298,8 @@ const styles = StyleSheet.create({
   emptyIcon: { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center", marginBottom: 6 },
   emptyTitle: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   loading: { marginTop: 38 },
-  card: { borderWidth: 1, padding: 15 },
+  card: { borderWidth: 1, padding: 17 },
+  compactCard: { padding: 14 },
   cardTop: { flexDirection: "row", alignItems: "center", gap: 11 },
   dateIcon: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   cardHeading: { flex: 1 },
@@ -294,14 +307,20 @@ const styles = StyleSheet.create({
   roleLabel: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 3 },
   statusPill: { paddingHorizontal: 9, paddingVertical: 5, borderRadius: 20 },
   statusText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
-  dateTime: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 14, paddingTop: 12 },
-  dateText: { fontSize: 12, fontFamily: "Inter_500Medium", marginRight: 6 },
+  compactStatus: { alignSelf: "flex-start", marginTop: 10 },
+  dateTime: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 14, paddingTop: 12 },
+  dateItem: { flexDirection: "row", alignItems: "flex-start", gap: 7, flex: 1, minWidth: 160 },
+  compactDateItem: { flex: 0, width: "100%", minWidth: 0 },
+  dateText: { flex: 1, flexShrink: 1, fontSize: 12, lineHeight: 18, fontFamily: "Inter_500Medium" },
   requester: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 10 },
   actions: { flexDirection: "row", justifyContent: "flex-end", gap: 8, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 13, paddingTop: 12 },
-  actionButton: { minHeight: 38, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
+  compactActions: { flexDirection: "column", alignItems: "stretch" },
+  actionButton: { minHeight: 42, flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
+  compactActionButton: { flex: 0, width: "100%", minHeight: 46 },
   actionText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
   modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 24 },
-  modalCard: { borderWidth: 1, borderRadius: 14, padding: 20, gap: 12 },
+  modalCard: { borderWidth: 1, borderRadius: 22, padding: 20, gap: 12 },
   rescheduleInput: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 14, fontFamily: "Inter_400Regular" },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 8, marginTop: 4 },
+  compactModalActions: { flexDirection: "column-reverse", alignItems: "stretch" },
 });

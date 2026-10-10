@@ -22,8 +22,8 @@ export default function MapSearchScreen() {
   const mapElement = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<LeafletMap | null>(null);
   const points = filteredProperties.filter((property) => Number.isFinite(property.latitude) && Number.isFinite(property.longitude));
-  const pointsKey = JSON.stringify(points.map(({ id, latitude, longitude, title }) => ({ id, latitude, longitude, title })));
-  const mapPoints = JSON.parse(pointsKey) as Array<{ id: string; latitude: number; longitude: number; title: string }>;
+  const pointsKey = JSON.stringify(points.map(({ id, latitude, longitude, title, price }) => ({ id, latitude, longitude, title, price })));
+  const mapPoints = JSON.parse(pointsKey) as Array<{ id: string; latitude: number; longitude: number; title: string; price: number }>;
   const centerLatitude = points[0]?.latitude ?? 2.0469;
   const centerLongitude = points[0]?.longitude ?? 45.3182;
 
@@ -51,11 +51,12 @@ export default function MapSearchScreen() {
         tileLayer.addTo(map);
 
         mapPoints.forEach((property) => {
+          const priceLabel = `$${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(property.price)}`;
           const icon = L.divIcon({
             className: "hayan-map-marker",
-            html: '<span style="display:flex;width:30px;height:30px;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50% 50% 50% 0;background:#b49a65;color:#fff;box-shadow:0 2px 6px #0005;transform:rotate(-45deg)"><span style="font-size:13px;font-weight:700;transform:rotate(45deg)">H</span></span>',
-            iconSize: [32, 40],
-            iconAnchor: [16, 38],
+            html: `<span style="display:flex;flex-direction:column;align-items:center;gap:3px"><span style="display:flex;width:27px;height:27px;align-items:center;justify-content:center;border:2px solid #fff;border-radius:50%;background:#202124;color:#fff;box-shadow:0 2px 7px #0004"><span style="font-size:14px;font-weight:700">⌂</span></span><span style="padding:3px 7px;border:1px solid #fff;border-radius:12px;background:#202124;color:#fff;box-shadow:0 2px 7px #0003;font:600 10px Inter,Arial,sans-serif;white-space:nowrap">${priceLabel}</span></span>`,
+            iconSize: [58, 54],
+            iconAnchor: [29, 16],
           });
           L.marker([property.latitude!, property.longitude!], { icon, title: property.title, alt: property.title })
             .on("click", () => router.push(`/property/${property.id}`))

@@ -44,7 +44,14 @@ export default function MapSearchScreen() {
             title={property.title}
             description={`${property.city} · $${property.price.toLocaleString()}`}
             onCalloutPress={() => router.push(`/property/${property.id}`)}
-          />
+          >
+            <View style={styles.marker}>
+              <View style={styles.markerIcon}><Feather name="home" size={13} color="#FFFFFF" /></View>
+              <View style={styles.markerPrice}>
+                <Text style={styles.markerPriceText}>${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(property.price)}</Text>
+              </View>
+            </View>
+          </Marker>
         ))}
       </MapView>
       <View style={[styles.topBar, { top: insets.top + (Platform.OS === "web" ? 67 : 8) }]}>
@@ -72,6 +79,10 @@ const styles = StyleSheet.create({
   topBar: { position: "absolute", left: 16, right: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", elevation: 3 },
   title: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 22, overflow: "hidden", fontFamily: "Inter_600SemiBold", fontSize: 13 },
-  empty: { position: "absolute", alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 10, elevation: 3 },
+  marker: { alignItems: "center", gap: 3 },
+  markerIcon: { width: 28, height: 28, alignItems: "center", justifyContent: "center", borderRadius: 14, borderWidth: 2, borderColor: "#FFFFFF", backgroundColor: "#202124", elevation: 4 },
+  markerPrice: { backgroundColor: "#202124", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: "#FFFFFF", elevation: 3 },
+  markerPriceText: { color: "#FFFFFF", fontFamily: "Inter_600SemiBold", fontSize: 9 },
+  empty: { position: "absolute", alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, elevation: 3 },
   emptyText: { fontFamily: "Inter_500Medium", fontSize: 13 },
 });

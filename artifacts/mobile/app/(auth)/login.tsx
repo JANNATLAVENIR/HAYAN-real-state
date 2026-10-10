@@ -76,8 +76,8 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Image source={require("@/assets/images/welcome-house-reference.png")} contentFit="cover" style={styles.loginBackdrop} accessibilityElementsHidden importantForAccessibility="no" />
         <View style={[styles.page, compact && styles.compactPage]}>
+        <Image source={require("@/assets/images/welcome-house-reference.png")} contentFit="cover" style={styles.loginBackdrop} accessibilityElementsHidden importantForAccessibility="no" pointerEvents="none" />
         <View style={styles.languageRow}>
           <View style={styles.languageSwitch}>
             <Pressable accessibilityRole="button" accessibilityState={{ selected: language === "en" }} onPress={() => void setLanguage("en")}><Text style={[styles.languageText, { color: language === "en" ? colors.primary : colors.mutedForeground }]}>EN</Text></Pressable>
@@ -190,9 +190,9 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: 24, alignItems: "center" },
-  page: { width: "100%", maxWidth: 520, flexGrow: 1, justifyContent: "space-between" },
+  page: { width: "100%", maxWidth: 520, flexGrow: 1, justifyContent: "space-between", position: "relative" },
   compactPage: { justifyContent: "flex-start" },
-  loginBackdrop: { position: "absolute", width: "120%", height: 260, bottom: -4, left: "-10%", opacity: 0.12 },
+  loginBackdrop: { position: "absolute", width: "100%", height: 230, bottom: 0, left: 0, opacity: 0.2 },
   languageRow: { height: 34, alignItems: "flex-end", justifyContent: "center" },
   languageSwitch: { flexDirection: "row", alignItems: "center", gap: 12 },
   languageText: { fontSize: 13, fontFamily: "Georgia" },

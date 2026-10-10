@@ -22,6 +22,11 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const desktop = Platform.OS === "web" && width >= 1000;
   const isAuthRoute = segments[0] === "(auth)" || ["/login", "/register", "/forgot-password", "/verify-mfa", "/reset-password"].includes(pathname);
+  const hideMobileNav = [
+    "conversation", "property", "create-listing", "schedule-viewing", "edit-profile",
+    "change-password", "admin", "reset-password", "security-settings",
+    "notification-settings", "user",
+  ].includes(String(segments[0] ?? ""));
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
@@ -52,9 +57,9 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
         onPress={() => router.push(item.href as never)}
-        style={({ pressed }) => [compact ? styles.mobileItem : styles.sideItem, { backgroundColor: active ? "rgba(201,169,110,0.14)" : "transparent", opacity: pressed ? 0.78 : 1 }]}
+        style={({ pressed }) => [compact ? styles.mobileItem : styles.sideItem, { backgroundColor: active && !compact ? "rgba(201,169,110,0.14)" : "transparent", opacity: pressed ? 0.78 : 1 }]}
       >
-        <Feather name={item.icon} size={compact ? 20 : 18} color={active ? colors.primary : colors.mutedForeground} />
+        <Feather name={item.icon} size={compact ? 20 : 18} color={active ? (compact ? colors.foreground : colors.primary) : colors.mutedForeground} />
         {!compact && <Text numberOfLines={1} style={[styles.sideLabel, { color: active ? colors.primary : colors.foreground }]}>{title}</Text>}
         {compact && settings.showNavLabels && <Text numberOfLines={1} style={[styles.mobileLabel, { color: active ? colors.primary : colors.mutedForeground }]}>{title}</Text>}
       </Pressable>
@@ -102,7 +107,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         </View>
       ) : null}
       <View style={styles.main}>{children}</View>
-      {!desktop && !isAuthRoute && settings.showFooter && mobileNav}
+      {!desktop && !isAuthRoute && !hideMobileNav && settings.showFooter && mobileNav}
     </View>
   );
 }

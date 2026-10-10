@@ -175,7 +175,7 @@ export default function PropertyDetailScreen() {
           ) : null}
         </View>
 
-        <View style={styles.infoSection}>
+        <View style={[styles.infoSection, { backgroundColor: colors.background }]}>
           <Text style={[styles.price, { color: colors.primary }]}>{formatPrice(property.price, property.listingType, language === "so" ? "so-SO" : "en-US", t("perMonth"))}</Text>
           <Text style={[styles.title, { color: colors.foreground }]}>{property.title}</Text>
           <View style={styles.locationRow}>
@@ -280,19 +280,19 @@ export default function PropertyDetailScreen() {
 
       {isAvailable ? <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8) }]}>
         <Pressable
-          style={({ pressed }) => [styles.contactBtn, { borderColor: colors.primary, borderRadius: colors.radius, opacity: contacting ? 0.65 : pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.contactBtn, { borderColor: colors.foreground, borderRadius: 28, opacity: contacting ? 0.65 : pressed ? 0.9 : 1 }]}
           onPress={handleContact}
           disabled={contacting}
         >
-          {contacting ? <ActivityIndicator size="small" color={colors.primary} /> : <Feather name="message-circle" size={18} color={colors.primary} />}
-          <Text style={[styles.contactBtnText, { color: colors.primary }]}>{contacting ? t("openingConversation") : t("message")}</Text>
+          {contacting ? <ActivityIndicator size="small" color={colors.foreground} /> : <Feather name="message-circle" size={18} color={colors.foreground} />}
+          <Text style={[styles.contactBtnText, { color: colors.foreground }]}>{contacting ? t("openingConversation") : t("message")}</Text>
         </Pressable>
         <Pressable
-          style={({ pressed }) => [styles.scheduleBtn, { backgroundColor: colors.primary, borderRadius: colors.radius, opacity: pressed ? 0.9 : 1 }]}
+          style={({ pressed }) => [styles.scheduleBtn, { backgroundColor: colors.foreground, borderRadius: 28, opacity: pressed ? 0.9 : 1 }]}
           onPress={handleSchedule}
         >
-          <Feather name="calendar" size={18} color={colors.primaryForeground} />
-          <Text style={[styles.scheduleBtnText, { color: colors.primaryForeground }]}>{t("scheduleViewing")}</Text>
+          <Feather name="calendar" size={18} color={colors.background} />
+          <Text style={[styles.scheduleBtnText, { color: colors.background }]}>{t("scheduleViewing")}</Text>
         </Pressable>
       </View> : <View style={[styles.unavailableBar, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: insets.bottom + 12 }]}>
         <Text style={[styles.availabilityText, { color: colors.mutedForeground }]}>{t(property.availabilityStatus ?? "unavailable")}</Text>
@@ -348,9 +348,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   imageActions: { flexDirection: "row", gap: 10 },
-  featuredBadge: { position: "absolute", bottom: 16, left: 16, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 6 },
+  featuredBadge: { position: "absolute", bottom: 16, left: 16, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
   featuredText: { fontSize: 10, fontFamily: "Inter_600SemiBold", letterSpacing: 1.5 },
-  infoSection: { padding: 20 },
+  infoSection: { padding: 20, marginTop: -22, borderTopLeftRadius: 26, borderTopRightRadius: 26 },
   price: { fontSize: 30, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   title: { fontSize: 22, fontFamily: "Inter_600SemiBold", marginTop: 6, letterSpacing: 0.3 },
   locationRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
@@ -358,20 +358,20 @@ const styles = StyleSheet.create({
   ownerProfileLink: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 10 },
   ownerProfileText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   directContactRow: { flexDirection: "row", gap: 10, marginBottom: 8 },
-  directContactButton: { flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 9 },
+  directContactButton: { flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderRadius: 22, paddingHorizontal: 14, paddingVertical: 10 },
   directContactText: { fontSize: 12, fontFamily: "Inter_500Medium" },
   safetyRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 },
   availabilityText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
   reportButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8, paddingHorizontal: 4 },
   reportText: { fontSize: 12, fontFamily: "Inter_500Medium" },
   reportBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 24 },
-  reportModal: { borderWidth: 1, borderRadius: 14, padding: 20 },
+  reportModal: { borderWidth: 1, borderRadius: 22, padding: 20 },
   reportOption: { paddingVertical: 13, borderBottomWidth: StyleSheet.hairlineWidth },
   reportCancel: { alignItems: "flex-end", paddingTop: 14 },
   map: { height: 190, width: "100%", marginTop: 16 },
   typeBadge: { alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 6, marginTop: 14 },
   typeLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5 },
-  statsGrid: { flexDirection: "row", borderWidth: 1, borderRadius: 12, padding: 16, marginTop: 20 },
+  statsGrid: { flexDirection: "row", borderWidth: 1, borderRadius: 20, padding: 16, marginTop: 20, backgroundColor: "#FFFFFF" },
   statItem: { flex: 1, alignItems: "center", gap: 4 },
   statValue: { fontSize: 20, fontFamily: "Inter_700Bold" },
   statLabel: { fontSize: 11, fontFamily: "Inter_400Regular" },
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   description: { fontSize: 15, fontFamily: "Inter_400Regular", lineHeight: 24 },
   amenitiesSection: { marginTop: 28 },
   amenitiesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  amenityTag: { paddingHorizontal: 14, paddingVertical: 8 },
+  amenityTag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18 },
   amenityText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   viewsRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 24, paddingTop: 20, borderTopWidth: StyleSheet.hairlineWidth },
   viewsText: { fontSize: 13, fontFamily: "Inter_400Regular" },
