@@ -199,7 +199,7 @@ export default function ViewingsScreen() {
                   </View>
                 ) : null}
 
-                <View style={[styles.dateTime, { borderTopColor: colors.border }]}>
+                <View style={[styles.dateTime, compact && styles.compactDateTime, { borderTopColor: colors.border }]}>
                   <View style={[styles.dateItem, compact && styles.compactDateItem]}>
                     <Feather name="calendar" size={15} color={colors.mutedForeground} />
                     <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingDate(item.date, locale)}</Text>
@@ -309,6 +309,7 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
   compactStatus: { alignSelf: "flex-start", marginTop: 10 },
   dateTime: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 14, paddingTop: 12 },
+  compactDateTime: { flexDirection: "column", alignItems: "stretch", gap: 9 },
   dateItem: { flexDirection: "row", alignItems: "flex-start", gap: 7, flex: 1, minWidth: 160 },
   compactDateItem: { flex: 0, width: "100%", minWidth: 0 },
   dateText: { flex: 1, flexShrink: 1, fontSize: 12, lineHeight: 18, fontFamily: "Inter_500Medium" },
