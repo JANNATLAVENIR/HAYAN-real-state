@@ -80,10 +80,11 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           position: fixed !important;
           left: 0 !important;
           right: 0 !important;
-          bottom: 0 !important;
+          bottom: env(safe-area-inset-bottom, 0px) !important;
           z-index: 1000 !important;
-          height: calc(var(--hayan-nav-content-height, 60px) + env(safe-area-inset-bottom, 0px)) !important;
-          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+          height: 52px !important;
+          min-height: 52px !important;
+          padding: 0 !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
         }
@@ -172,8 +173,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
     if (Platform.OS !== "web" || typeof document === "undefined") return;
     document.documentElement.style.setProperty("--hayan-app-background", colors.background);
     document.documentElement.style.setProperty("--hayan-nav-background", colors.card);
-    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${Math.min(settings.navHeight, 60)}px`);
-  }, [colors.background, colors.card, settings.navHeight]);
+  }, [colors.background, colors.card]);
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
@@ -214,7 +214,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileNav = (
-    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: Platform.OS === "web" ? Math.min(settings.navHeight, 60) : settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
+    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: Platform.OS === "web" ? 52 : settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
       {mobileItems.map((item) => navItem(item, true))}
     </View>
   );
@@ -275,6 +275,6 @@ const styles = StyleSheet.create({
   accountAction: { fontFamily: "Inter_500Medium", fontSize: 12 },
   main: { flex: 1, minWidth: 0 },
   mobileNav: { position: "absolute", left: 0, right: 0, bottom: 0, minHeight: 68, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: 10, paddingBottom: 6 },
-  mobileItem: { flex: 1, minHeight: 54, alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 10 },
+  mobileItem: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 10 },
   mobileLabel: { fontFamily: "Inter_500Medium", fontSize: 9, letterSpacing: 0.2 },
 });
