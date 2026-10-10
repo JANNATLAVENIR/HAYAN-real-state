@@ -44,7 +44,9 @@ export default function ConversationScreen() {
     const updateViewport = () => {
       root.style.setProperty("--hayan-chat-viewport-height", `${viewport.height}px`);
       root.style.setProperty("--hayan-chat-viewport-top", `${viewport.offsetTop}px`);
-      root.dataset.hayanKeyboardOpen = window.innerHeight - viewport.height > 120 ? "true" : "false";
+      const inputFocused = document.activeElement?.id === "chat-message-input";
+      const viewportReduced = window.innerHeight - viewport.height > 80;
+      root.dataset.hayanKeyboardOpen = inputFocused || viewportReduced ? "true" : "false";
     };
     updateViewport();
     viewport.addEventListener("resize", updateViewport);
@@ -235,6 +237,16 @@ export default function ConversationScreen() {
               placeholderTextColor={colors.mutedForeground}
               value={text}
               onChangeText={setText}
+              onFocus={() => {
+                if (Platform.OS === "web" && typeof document !== "undefined") {
+                  document.documentElement.dataset.hayanKeyboardOpen = "true";
+                }
+              }}
+              onBlur={() => {
+                if (Platform.OS === "web" && typeof document !== "undefined") {
+                  document.documentElement.dataset.hayanKeyboardOpen = "false";
+                }
+              }}
               multiline
               maxLength={500}
             />
