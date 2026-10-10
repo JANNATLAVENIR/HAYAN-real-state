@@ -130,7 +130,7 @@ export default function ViewingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 8), borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: insets.top + (Platform.OS === "web" && !compact ? 67 : 8), borderBottomColor: colors.border }]}>
         <Pressable onPress={() => router.back()} accessibilityLabel={t("cancel")} hitSlop={12}>
           <Feather name="arrow-left" size={23} color={colors.foreground} />
         </Pressable>
