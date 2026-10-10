@@ -80,7 +80,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           position: fixed !important;
           left: 0 !important;
           right: 0 !important;
-          bottom: 0 !important;
+          bottom: calc(0px - env(safe-area-inset-bottom, 0px)) !important;
           z-index: 1000 !important;
           height: calc(52px + env(safe-area-inset-bottom, 0px)) !important;
           min-height: 52px !important;
