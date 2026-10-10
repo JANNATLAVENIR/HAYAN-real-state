@@ -88,6 +88,11 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           background: var(--hayan-nav-background, #ffffff) !important;
         }
       }
+      @media (display-mode: standalone) and (max-width: 999px) {
+        #hayan-mobile-nav {
+          bottom: calc(0px - env(safe-area-inset-bottom, 0px)) !important;
+        }
+      }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
       #hayan-login-email,
       #hayan-login-password,
