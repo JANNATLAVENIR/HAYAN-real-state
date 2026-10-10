@@ -77,24 +77,25 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       @media (max-width: 999px) {
         input, textarea, select { font-size: 16px !important; }
         #hayan-mobile-nav {
+          --hayan-nav-safe-area: min(env(safe-area-inset-bottom, 0px), 14px);
           position: fixed !important;
           left: 0 !important;
           right: 0 !important;
           bottom: 0 !important;
           z-index: 1000 !important;
-          height: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
+          height: calc(40px + var(--hayan-nav-safe-area)) !important;
           min-height: 0 !important;
-          padding: 0 0 env(safe-area-inset-bottom, 0px) !important;
+          padding: 0 0 var(--hayan-nav-safe-area) !important;
           box-sizing: border-box !important;
           background: var(--hayan-app-background, #fcfbf9) !important;
           display: flex !important;
           align-items: flex-start !important;
         }
         #hayan-mobile-nav-row {
-          flex: 0 0 44px !important;
+          flex: 0 0 40px !important;
           width: 100% !important;
-          height: 44px !important;
-          min-height: 44px !important;
+          height: 40px !important;
+          min-height: 40px !important;
           padding: 0 10px !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
   accountAction: { fontFamily: "Inter_500Medium", fontSize: 12 },
   main: { flex: 1, minWidth: 0 },
   mobileNavShell: { position: "absolute", left: 0, right: 0, bottom: 0 },
-  mobileNav: { minHeight: 44, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
-  mobileItem: { flex: 1, minHeight: 42, alignItems: "center", justifyContent: "center", gap: 1, borderRadius: 10 },
+  mobileNav: { minHeight: 40, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
+  mobileItem: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", gap: 1, borderRadius: 10 },
   mobileLabel: { fontFamily: "Inter_500Medium", fontSize: 9, letterSpacing: 0.2 },
 });
