@@ -77,7 +77,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
       @media (max-width: 999px) {
         input, textarea, select { font-size: 16px !important; }
         #hayan-mobile-nav {
-          --hayan-nav-safe-area: min(env(safe-area-inset-bottom, 0px), 8px);
+          --hayan-nav-safe-area: min(env(safe-area-inset-bottom, 0px), 4px);
           position: fixed !important;
           left: 0 !important;
           right: 0 !important;
