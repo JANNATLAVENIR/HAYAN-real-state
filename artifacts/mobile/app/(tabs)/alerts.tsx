@@ -135,7 +135,7 @@ export default function AlertsScreen() {
             {!isLoading && !loadError ? <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t("alertEmpty")}</Text> : null}
           </View>
         }
-        contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? Math.max(insets.bottom + 84, 108) : insets.bottom + 100 }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? Math.max(insets.bottom + 84, 88) : insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
       />
     </View>
