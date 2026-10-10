@@ -1,14 +1,13 @@
-const CACHE_NAME = "hayan-pwa-v4";
+const CACHE_NAME = "hayan-pwa-v3";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll([
       "/",
       "/manifest.webmanifest",
-      "/hayan-home-icon-v3-180.png",
-      "/hayan-home-icon-v3-192.png",
-      "/hayan-home-icon-v3-512.png",
-      "/hayan-home-icon-v3-maskable.png",
+      "/hayan-home-icon-v2-192.png",
+      "/hayan-home-icon-v2-512.png",
+      "/hayan-home-icon-v2-maskable.png",
     ])),
   );
   self.skipWaiting();
