@@ -51,7 +51,67 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
     }
 
     const chatFocusStyle = document.createElement("style");
-    chatFocusStyle.textContent = "#chat-message-input:focus { outline: none !important; box-shadow: none !important; }";
+    chatFocusStyle.textContent = `
+      html, body, #root {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+      }
+      body, #root {
+        position: fixed !important;
+        inset: 0 !important;
+      }
+      #hayan-app-shell {
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+        touch-action: pan-x pan-y;
+      }
+      @media (max-width: 999px) {
+        input, textarea, select { font-size: 16px !important; }
+      }
+      #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
+      #hayan-chat-screen {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        height: var(--hayan-chat-viewport-height, 100dvh) !important;
+      }
+      @media (max-width: 999px) {
+        #hayan-chat-screen {
+          position: fixed !important;
+          inset: var(--hayan-chat-viewport-top, 0px) 0 auto 0 !important;
+          height: var(--hayan-chat-viewport-height, 100dvh) !important;
+          max-height: none !important;
+          z-index: 20 !important;
+        }
+        #hayan-chat-messages {
+          flex: 1 1 0% !important;
+          min-height: 0 !important;
+          overflow-y: auto !important;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+        #hayan-chat-composer {
+          position: sticky !important;
+          bottom: 0 !important;
+          z-index: 1 !important;
+          flex: 0 0 auto !important;
+          padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+        }
+        html[data-hayan-keyboard-open="true"] #hayan-chat-composer {
+          padding-bottom: 0 !important;
+        }
+      }
+    `;
     document.head.appendChild(chatFocusStyle);
 
     const preventGestureZoom = (event: Event) => event.preventDefault();
@@ -122,7 +182,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   if (Platform.OS !== "web") return <>{children}</>;
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <View nativeID="hayan-app-shell" style={[styles.root, { backgroundColor: colors.background }]}>
       {desktop && !isAuthRoute ? (
         <View style={[styles.sidebar, { backgroundColor: colors.card, borderRightColor: colors.border }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="HAYÁN Real Estate" onPress={() => router.push("/(tabs)" as never)} style={[styles.brand, { paddingHorizontal: settings.headerPadding }]}>

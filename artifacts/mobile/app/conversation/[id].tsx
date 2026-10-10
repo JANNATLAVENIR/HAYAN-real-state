@@ -23,8 +23,6 @@ export default function ConversationScreen() {
   const { language, t } = useLanguage();
   const { messages, getConversation, loadConversationMessages, receiveRealtimeMessage, sendMessage, markAsRead, isLoading, loadError, reload } = useChat();
   const [text, setText] = useState("");
-  const [composerFocused, setComposerFocused] = useState(false);
-  const [webViewport, setWebViewport] = useState<{ height: number; offsetTop: number } | null>(null);
   const [sendError, setSendError] = useState("");
   const [sending, setSending] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -34,15 +32,20 @@ export default function ConversationScreen() {
   const otherParticipantAvatar = otherParticipantId ? conversation?.participantAvatars?.[otherParticipantId] : undefined;
 
   useEffect(() => {
-    if (Platform.OS !== "web" || !composerFocused || typeof window === "undefined") {
-      setWebViewport(null);
-      return;
-    }
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
 
     const viewport = window.visualViewport;
     if (!viewport) return;
 
-    const updateViewport = () => setWebViewport({ height: viewport.height, offsetTop: viewport.offsetTop });
+    const root = document.documentElement;
+    const previousHeight = root.style.getPropertyValue("--hayan-chat-viewport-height");
+    const previousTop = root.style.getPropertyValue("--hayan-chat-viewport-top");
+    const previousKeyboardState = root.dataset.hayanKeyboardOpen;
+    const updateViewport = () => {
+      root.style.setProperty("--hayan-chat-viewport-height", `${viewport.height}px`);
+      root.style.setProperty("--hayan-chat-viewport-top", `${viewport.offsetTop}px`);
+      root.dataset.hayanKeyboardOpen = window.innerHeight - viewport.height > 120 ? "true" : "false";
+    };
     updateViewport();
     viewport.addEventListener("resize", updateViewport);
     viewport.addEventListener("scroll", updateViewport);
@@ -51,8 +54,14 @@ export default function ConversationScreen() {
       viewport.removeEventListener("resize", updateViewport);
       viewport.removeEventListener("scroll", updateViewport);
       window.removeEventListener("resize", updateViewport);
+      if (previousHeight) root.style.setProperty("--hayan-chat-viewport-height", previousHeight);
+      else root.style.removeProperty("--hayan-chat-viewport-height");
+      if (previousTop) root.style.setProperty("--hayan-chat-viewport-top", previousTop);
+      else root.style.removeProperty("--hayan-chat-viewport-top");
+      if (previousKeyboardState === undefined) delete root.dataset.hayanKeyboardOpen;
+      else root.dataset.hayanKeyboardOpen = previousKeyboardState;
     };
-  }, [composerFocused]);
+  }, []);
 
   useEffect(() => {
     if (!id || !user || isLoading || !conversation) return;
@@ -125,17 +134,8 @@ export default function ConversationScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[
-        styles.container,
-        webViewport && {
-          position: "absolute",
-          top: webViewport.offsetTop,
-          left: 0,
-          right: 0,
-          flex: 0,
-          height: webViewport.height,
-        },
-      ]}
+      nativeID="hayan-chat-screen"
+      style={styles.container}
       behavior={Platform.OS === "web" ? undefined : "padding"}
       keyboardVerticalOffset={0}
     >
@@ -199,6 +199,7 @@ export default function ConversationScreen() {
         ) : null}
 
         <FlatList
+          nativeID="hayan-chat-messages"
           data={[...chatMessages].reverse()}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -209,6 +210,7 @@ export default function ConversationScreen() {
             />
           )}
           inverted
+          style={styles.messagesViewport}
           contentContainerStyle={styles.messagesList}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
@@ -224,8 +226,8 @@ export default function ConversationScreen() {
             {t("messageSendFailed")}: {sendError}
           </Text>
         ) : null}
-        <View style={[styles.inputBar, { borderTopColor: colors.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? (composerFocused ? 0 : 34) : 8) }]}>
-          <View style={[styles.inputWrapper, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 }]}>
+        <View nativeID="hayan-chat-composer" style={[styles.inputBar, Platform.OS === "web" && styles.webInputBar, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: Platform.OS === "web" ? 0 : insets.bottom + 8 }]}>
+          <View style={[styles.inputWrapper, Platform.OS === "web" && styles.webInputWrapper, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 24 }]}>
             <TextInput
               nativeID="chat-message-input"
               style={[styles.textInput, Platform.OS === "web" && styles.webTextInput, { color: colors.foreground }]}
@@ -233,14 +235,12 @@ export default function ConversationScreen() {
               placeholderTextColor={colors.mutedForeground}
               value={text}
               onChangeText={setText}
-              onFocus={() => setComposerFocused(true)}
-              onBlur={() => setComposerFocused(false)}
               multiline
               maxLength={500}
             />
           </View>
           <Pressable
-            style={[styles.sendBtn, { backgroundColor: text.trim() && !sending ? colors.primary : colors.muted }]}
+            style={[styles.sendBtn, Platform.OS === "web" && styles.webSendBtn, { backgroundColor: text.trim() && !sending ? colors.primary : colors.muted }]}
             onPress={handleSend}
             disabled={!text.trim() || sending}
           >
@@ -276,6 +276,7 @@ const styles = StyleSheet.create({
   propertyInfo: { flex: 1 },
   propertyTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   propertyMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 2 },
+  messagesViewport: { flex: 1, minHeight: 0 },
   messagesList: { paddingVertical: 16 },
   emptyChat: { alignItems: "center", padding: 40, transform: [{ scaleY: -1 }] },
   emptyChatText: { fontSize: 14, fontFamily: "Inter_400Regular" },
@@ -283,14 +284,17 @@ const styles = StyleSheet.create({
   sendError: { paddingHorizontal: 16, paddingTop: 8, fontSize: 12, fontFamily: "Inter_400Regular" },
   inputBar: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: 10,
+    gap: 9,
   },
-  inputWrapper: { flex: 1, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 100 },
-  textInput: { fontSize: 15, fontFamily: "Inter_400Regular", maxHeight: 80 },
-  webTextInput: { fontSize: 16 },
+  webInputBar: { paddingHorizontal: 16, paddingTop: 8, gap: 9 },
+  inputWrapper: { flex: 1, minHeight: 44, borderWidth: 1, paddingHorizontal: 15, paddingVertical: 7, maxHeight: 100, justifyContent: "center" },
+  webInputWrapper: { minHeight: 46, paddingVertical: 5 },
+  textInput: { fontSize: 15, lineHeight: 21, fontFamily: "Inter_400Regular", maxHeight: 80, paddingVertical: 0, textAlignVertical: "center" },
+  webTextInput: { fontSize: 16, lineHeight: 21, minHeight: 21, paddingVertical: 0, maxHeight: 76 },
   sendBtn: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
+  webSendBtn: { width: 42, height: 42, borderRadius: 21 },
 });
