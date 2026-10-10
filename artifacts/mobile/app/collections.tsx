@@ -118,9 +118,9 @@ export default function CollectionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 }, header: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, borderBottomWidth: StyleSheet.hairlineWidth },
-  title: { fontFamily: "Inter_600SemiBold", fontSize: 14, letterSpacing: 1.5 }, empty: { textAlign: "center", margin: 28, fontFamily: "Inter_400Regular", fontSize: 14 },
-  createRow: { borderWidth: 1, borderRadius: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, marginBottom: 18, gap: 12 }, input: { flex: 1, fontFamily: "Inter_400Regular", fontSize: 14 },
-  collectionRow: { borderWidth: 1, borderRadius: 10, padding: 14, marginBottom: 10, flexDirection: "row", alignItems: "center", gap: 12 }, collectionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }, collectionName: { flex: 1, fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  container: { flex: 1 }, header: { minHeight: 62, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, borderBottomWidth: StyleSheet.hairlineWidth },
+  title: { fontFamily: "Inter_600SemiBold", fontSize: 20, letterSpacing: 0.2 }, empty: { textAlign: "center", margin: 28, fontFamily: "Inter_400Regular", fontSize: 14 },
+  createRow: { borderWidth: 1, borderRadius: 18, flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 13, marginBottom: 18, gap: 12 }, input: { flex: 1, fontFamily: "Inter_400Regular", fontSize: 14 },
+  collectionRow: { borderWidth: 1, borderRadius: 18, padding: 15, marginBottom: 10, flexDirection: "row", alignItems: "center", gap: 12 }, collectionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }, collectionName: { flex: 1, fontFamily: "Inter_600SemiBold", fontSize: 15 },
   sectionTitle: { paddingHorizontal: 20, fontFamily: "Inter_600SemiBold", fontSize: 11, letterSpacing: 1.5, marginBottom: 10 }, propertyRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }, toggle: { width: 38, height: 38, borderWidth: 1, borderRadius: 19, alignItems: "center", justifyContent: "center", marginLeft: 4 },
 });

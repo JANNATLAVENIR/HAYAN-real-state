@@ -204,10 +204,10 @@ export default function CreateListingScreen() {
                 {PROPERTY_TYPES.map((pt) => (
                   <Pressable
                     key={pt}
-                    style={[styles.chip, { borderColor: type === pt ? colors.primary : colors.border, backgroundColor: type === pt ? colors.primary : "transparent" }]}
+                    style={[styles.chip, { borderColor: type === pt ? colors.foreground : colors.border, backgroundColor: type === pt ? colors.foreground : "transparent" }]}
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setType(pt); }}
                   >
-                    <Text style={[styles.chipText, { color: type === pt ? colors.primaryForeground : colors.foreground }]}>
+                    <Text style={[styles.chipText, { color: type === pt ? colors.background : colors.foreground }]}>
                       {t(pt)}
                     </Text>
                   </Pressable>
@@ -219,10 +219,10 @@ export default function CreateListingScreen() {
                 {(["sale", "rent"] as const).map((lt) => (
                   <Pressable
                     key={lt}
-                    style={[styles.chip, { borderColor: listingType === lt ? colors.primary : colors.border, backgroundColor: listingType === lt ? colors.primary : "transparent" }]}
+                    style={[styles.chip, { borderColor: listingType === lt ? colors.foreground : colors.border, backgroundColor: listingType === lt ? colors.foreground : "transparent" }]}
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setListingType(lt); }}
                   >
-                    <Text style={[styles.chipText, { color: listingType === lt ? colors.primaryForeground : colors.foreground }]}>
+                    <Text style={[styles.chipText, { color: listingType === lt ? colors.background : colors.foreground }]}>
                       {lt === "sale" ? t("forSale") : t("forRent")}
                     </Text>
                   </Pressable>
@@ -258,8 +258,8 @@ export default function CreateListingScreen() {
                   <Text style={[styles.fieldLabel, { color: colors.foreground, marginBottom: 12 }]}>{t("availabilityStatus")}</Text>
                   <View style={[styles.chipRow, { marginBottom: 22 }]}>
                     {(["available", listingType === "rent" ? "rented" : "sold", "unavailable"] as const).map((status) => (
-                      <Pressable key={status} onPress={() => setAvailabilityStatus(status)} style={[styles.chip, { borderColor: availabilityStatus === status ? colors.primary : colors.border, backgroundColor: availabilityStatus === status ? colors.primary : "transparent" }]}>
-                        <Text style={[styles.chipText, { color: availabilityStatus === status ? colors.primaryForeground : colors.foreground }]}>{t(status)}</Text>
+                      <Pressable key={status} onPress={() => setAvailabilityStatus(status)} style={[styles.chip, { borderColor: availabilityStatus === status ? colors.foreground : colors.border, backgroundColor: availabilityStatus === status ? colors.foreground : "transparent" }]}>
+                        <Text style={[styles.chipText, { color: availabilityStatus === status ? colors.background : colors.foreground }]}>{t(status)}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -272,10 +272,10 @@ export default function CreateListingScreen() {
                   return (
                     <Pressable
                       key={a}
-                      style={[styles.chip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : "transparent" }]}
+                      style={[styles.chip, { borderColor: selected ? colors.foreground : colors.border, backgroundColor: selected ? colors.foreground : "transparent" }]}
                       onPress={() => toggleAmenity(a)}
                     >
-                      <Text style={[styles.chipText, { color: selected ? colors.primaryForeground : colors.foreground }]}>{translateAmenity(a, t)}</Text>
+                      <Text style={[styles.chipText, { color: selected ? colors.background : colors.foreground }]}>{translateAmenity(a, t)}</Text>
                     </Pressable>
                   );
                 })}
@@ -327,11 +327,11 @@ export default function CreateListingScreen() {
 
         <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 8) }]}>
           <Pressable
-            style={({ pressed }) => [styles.nextBtn, { backgroundColor: canNext() ? colors.primary : colors.muted, borderRadius: colors.radius, opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [styles.nextBtn, { backgroundColor: canNext() ? colors.foreground : colors.muted, borderRadius: 28, opacity: pressed ? 0.9 : 1 }]}
             onPress={handleNext}
             disabled={!canNext() || loading}
           >
-            <Text style={[styles.nextBtnText, { color: canNext() ? colors.primaryForeground : colors.mutedForeground }]}>
+            <Text style={[styles.nextBtnText, { color: canNext() ? colors.background : colors.mutedForeground }]}>
               {step === 3 ? (loading ? t("publishing") : editId ? t("saveListing") : t("publishListing")) : t("continue")}
             </Text>
           </Pressable>
@@ -344,18 +344,18 @@ export default function CreateListingScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  headerTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", letterSpacing: 2 },
+  headerTitle: { fontSize: 19, fontFamily: "Inter_600SemiBold", letterSpacing: 0.2 },
   content: { flex: 1, paddingHorizontal: 20, paddingTop: 8 },
   fieldGroup: { marginBottom: 18 },
   fieldLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 1.5, marginBottom: 8 },
-  inputWrapper: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 14 },
+  inputWrapper: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 14, backgroundColor: "#FFFFFF" },
   textInput: { fontSize: 15, fontFamily: "Inter_400Regular" },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, borderWidth: 1 },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, borderWidth: 1 },
   chipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   switchRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   switchLabel: { fontSize: 15, fontFamily: "Inter_500Medium" },
-  mediaSection: { borderWidth: 1, borderStyle: "dashed", padding: 28, alignItems: "center", gap: 8 },
+  mediaSection: { borderWidth: 1, borderStyle: "dashed", padding: 28, alignItems: "center", gap: 8, backgroundColor: "#FFFFFF" },
   mediaTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginTop: 4 },
   mediaSubtitle: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center" },
   uploadBtn: { paddingHorizontal: 20, paddingVertical: 10, borderWidth: 1, marginTop: 8 },

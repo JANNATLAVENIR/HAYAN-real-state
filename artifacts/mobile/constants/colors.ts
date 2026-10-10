@@ -34,7 +34,7 @@ const colors = {
     charcoalLight: "#4A4540",
   },
 
-  radius: 12,
+  radius: 16,
 };
 
 export default colors;
