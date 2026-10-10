@@ -73,13 +73,13 @@ jobs:
           for environment in production preview; do
             page=1
             while true; do
-              response="$(api GET "/deployments?env=${environment}&page=${page}&per_page=100")"
+              response="$(api GET "/deployments?env=${environment}&page=${page}&per_page=20")"
               jq -e '.success == true' <<<"$response" >/dev/null
               jq -c '.result[]' <<<"$response" >>"$deployments_file"
 
               total_pages="$(jq -r '.result_info.total_pages // empty' <<<"$response")"
               count="$(jq '.result | length' <<<"$response")"
-              if [[ -n "$total_pages" && "$page" -ge "$total_pages" ]] || [[ "$count" -lt 100 ]]; then
+              if [[ -n "$total_pages" && "$page" -ge "$total_pages" ]] || [[ "$count" -lt 20 ]]; then
                 break
               fi
               page=$((page + 1))
@@ -112,11 +112,11 @@ jobs:
             deleted=$((deleted + 1))
           done < <(jq -r --arg live "$live_id" '.id as $id | select($id != $live) | [.id, .environment] | @tsv' "$deployments_file")
 
-          remaining="$(api GET "/deployments?env=production&page=1&per_page=100")"
+          remaining="$(api GET "/deployments?env=production&page=1&per_page=20")"
           jq -e '.success == true and (.result | length == 1)' <<<"$remaining" >/dev/null
           jq -e --arg id "$live_id" '.result[0].id == $id' <<<"$remaining" >/dev/null
 
-          remaining_previews="$(api GET "/deployments?env=preview&page=1&per_page=100")"
+          remaining_previews="$(api GET "/deployments?env=preview&page=1&per_page=20")"
           jq -e '.success == true and (.result | length == 0)' <<<"$remaining_previews" >/dev/null
 
           echo "Removed ${deleted} old deployment(s); the verified live production deployment remains."
