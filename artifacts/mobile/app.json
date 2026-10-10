@@ -42,8 +42,8 @@
       "name": "HAYÁN Real Estate",
       "shortName": "HAYÁN",
       "description": "Discover and manage exceptional properties with HAYÁN.",
-      "themeColor": "#FFFFFF",
-      "backgroundColor": "#FFFFFF",
+      "themeColor": "#FAF8F5",
+      "backgroundColor": "#FAF8F5",
       "display": "standalone",
       "startUrl": "/"
     },

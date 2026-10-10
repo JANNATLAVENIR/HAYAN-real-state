@@ -107,6 +107,7 @@ export default function LoginScreen() {
             <View style={[styles.inputWrapper, { borderColor: colors.border }]}>
               <Feather name="mail" size={18} color={colors.mutedForeground} />
               <TextInput
+                nativeID="hayan-login-email"
                 style={[styles.textInput, { color: colors.foreground }]}
                 placeholder={language === "en" ? "Email address" : t("email")}
                 placeholderTextColor={colors.mutedForeground}
@@ -124,6 +125,7 @@ export default function LoginScreen() {
             <View style={[styles.inputWrapper, { borderColor: colors.border }]}>
               <Feather name="lock" size={18} color={colors.mutedForeground} />
               <TextInput
+                nativeID="hayan-login-password"
                 style={[styles.textInput, { color: colors.foreground }]}
                 placeholder={t("enterPassword")}
                 placeholderTextColor={colors.mutedForeground}

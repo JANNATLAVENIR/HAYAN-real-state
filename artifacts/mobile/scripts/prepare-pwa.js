@@ -49,7 +49,7 @@ for (const htmlPath of findHtmlFiles(outputDir)) {
   html = setMeta(html, "viewport", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
   html = setMeta(html, "apple-mobile-web-app-capable", "yes");
   html = setMeta(html, "apple-mobile-web-app-status-bar-style", "black-translucent");
-  html = setMeta(html, "theme-color", "#FFFFFF");
+  html = setMeta(html, "theme-color", "#FAF8F5");
   html = setLink(html, "manifest", '<link rel="manifest" href="/manifest.webmanifest" />');
   html = setLink(html, "apple-touch-icon", '<link rel="apple-touch-icon" sizes="180x180" href="/hayan-home-icon-v3-180.png" />');
   html = setLink(html, "icon", '<link rel="icon" type="image/png" sizes="180x180" href="/hayan-home-icon-v3-180.png" />');

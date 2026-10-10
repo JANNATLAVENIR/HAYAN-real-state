@@ -84,12 +84,33 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           z-index: 1000 !important;
           padding-bottom: env(safe-area-inset-bottom, 0px) !important;
           box-sizing: content-box !important;
-        }
-        #hayan-main-content {
-          padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+          background: linear-gradient(
+            to bottom,
+            var(--hayan-nav-background, #ffffff) 0,
+            var(--hayan-nav-background, #ffffff) calc(100% - env(safe-area-inset-bottom, 0px)),
+            var(--hayan-app-background, #FAF8F5) 100%
+          ) !important;
         }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
+      #hayan-login-email,
+      #hayan-login-password,
+      #hayan-login-email:focus,
+      #hayan-login-password:focus,
+      #hayan-login-email:focus-visible,
+      #hayan-login-password:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+      }
+      #hayan-login-email:-webkit-autofill,
+      #hayan-login-password:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px #fcfbf9 inset !important;
+        box-shadow: 0 0 0 1000px #fcfbf9 inset !important;
+        -webkit-text-fill-color: #262626 !important;
+        caret-color: #262626 !important;
+      }
       #hayan-chat-screen {
         display: flex !important;
         flex-direction: column !important;
@@ -154,8 +175,8 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (Platform.OS !== "web" || typeof document === "undefined") return;
     document.documentElement.style.setProperty("--hayan-app-background", colors.background);
-    document.getElementById("hayan-mobile-nav")?.style.setProperty("--hayan-nav-content-height", `${settings.navHeight}px`);
-  }, [colors.background, settings.navHeight]);
+    document.documentElement.style.setProperty("--hayan-nav-background", colors.card);
+  }, [colors.background, colors.card]);
   const primary: Destination[] = [
     { href: "/(tabs)", title: t("discover"), icon: "search", activePaths: ["/", "/(tabs)"] },
     { href: "/(tabs)/chat", title: t("chat"), icon: "message-circle", activePaths: ["/chat"] },
@@ -235,7 +256,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           </View>
         </View>
       ) : null}
-      <View nativeID={showMobileFooter ? "hayan-main-content" : undefined} style={styles.main}>{children}</View>
+      <View style={styles.main}>{children}</View>
       {showMobileFooter && mobileNav}
     </View>
   );
