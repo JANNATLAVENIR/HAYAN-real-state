@@ -202,11 +202,11 @@ export default function ViewingsScreen() {
                 <View style={[styles.dateTime, compact && styles.compactDateTime, { borderTopColor: colors.border }]}>
                   <View style={[styles.dateItem, compact && styles.compactDateItem]}>
                     <Feather name="calendar" size={15} color={colors.mutedForeground} />
-                    <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingDate(item.date, locale)}</Text>
+                    <Text style={[styles.dateText, compact && styles.compactDateText, { color: colors.foreground }]}>{formatViewingDate(item.date, locale)}</Text>
                   </View>
                   <View style={[styles.dateItem, compact && styles.compactDateItem]}>
                     <Feather name="clock" size={15} color={colors.mutedForeground} />
-                    <Text style={[styles.dateText, { color: colors.foreground }]}>{formatViewingTime(item.time, locale)}</Text>
+                    <Text style={[styles.dateText, compact && styles.compactDateText, { color: colors.foreground }]}>{formatViewingTime(item.time, locale)}</Text>
                   </View>
                 </View>
 
@@ -309,10 +309,11 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
   compactStatus: { alignSelf: "flex-start", marginTop: 10 },
   dateTime: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 14, paddingTop: 12 },
-  compactDateTime: { flexDirection: "column", alignItems: "stretch", gap: 9 },
-  dateItem: { flexDirection: "row", alignItems: "flex-start", gap: 7, flex: 1, minWidth: 160 },
-  compactDateItem: { flex: 0, width: "100%", minWidth: 0 },
-  dateText: { flex: 1, flexShrink: 1, fontSize: 12, lineHeight: 18, fontFamily: "Inter_500Medium" },
+  compactDateTime: { width: "100%", flexDirection: "column", alignItems: "flex-start", gap: 9 },
+  dateItem: { flexDirection: "row", flexWrap: "nowrap", alignItems: "center", gap: 7, flex: 1, minWidth: 160 },
+  compactDateItem: { alignSelf: "stretch", flex: 0, width: "100%", minWidth: 0 },
+  dateText: { flex: 1, flexShrink: 1, minWidth: 0, fontSize: 12, lineHeight: 18, fontFamily: "Inter_500Medium" },
+  compactDateText: { flexGrow: 1, flexShrink: 1, flexBasis: 0, width: 0 },
   requester: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 10 },
   actions: { flexDirection: "row", justifyContent: "flex-end", gap: 8, borderTopWidth: StyleSheet.hairlineWidth, marginTop: 13, paddingTop: 12 },
   compactActions: { flexDirection: "column", alignItems: "stretch" },
