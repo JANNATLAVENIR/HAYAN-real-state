@@ -80,13 +80,23 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
           position: fixed !important;
           left: 0 !important;
           right: 0 !important;
-          bottom: calc(0px - env(safe-area-inset-bottom, 0px)) !important;
+          bottom: env(safe-area-inset-bottom, 0px) !important;
           z-index: 1000 !important;
-          height: calc(52px + env(safe-area-inset-bottom, 0px)) !important;
+          height: 52px !important;
           min-height: 52px !important;
-          padding: 0 0 env(safe-area-inset-bottom, 0px) !important;
+          padding: 0 !important;
           box-sizing: border-box !important;
           background: var(--hayan-nav-background, #ffffff) !important;
+        }
+        #hayan-mobile-nav::after {
+          content: "";
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-bottom, 0px);
+          background: var(--hayan-nav-background, #ffffff);
+          pointer-events: none;
         }
       }
       #chat-message-input:focus { outline: none !important; box-shadow: none !important; }
