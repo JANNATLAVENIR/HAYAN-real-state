@@ -78,7 +78,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
         input, textarea, select { font-size: 16px !important; }
         #hayan-mobile-nav {
           height: var(--hayan-nav-content-height, 68px) !important;
-          padding-bottom: 6px !important;
+          padding-bottom: 0 !important;
           box-sizing: border-box !important;
         }
       }
@@ -189,7 +189,7 @@ export function WebAppShell({ children }: { children: React.ReactNode }) {
   };
 
   const mobileNav = (
-    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: settings.navHeight, paddingBottom: settings.footerHeight / 4 }]}>
+    <View nativeID="hayan-mobile-nav" style={[styles.mobileNav, { backgroundColor: colors.card, borderTopColor: colors.border, minHeight: settings.navHeight, paddingBottom: Platform.OS === "web" ? 0 : settings.footerHeight / 4 }]}>
       {mobileItems.map((item) => navItem(item, true))}
     </View>
   );
